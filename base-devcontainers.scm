@@ -7,6 +7,7 @@
 
 (use-modules 
   (srfi srfi-1)
+  (srfi srfi-9)
   (ice-9 match))
 
 ;; Build profile definition following cognitive grammar

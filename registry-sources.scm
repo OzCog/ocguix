@@ -7,6 +7,7 @@
 
 (use-modules 
   (srfi srfi-1)
+  (srfi srfi-9)
   (ice-9 match))
 
 ;; Registry node definition following cognitive grammar
