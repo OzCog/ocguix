@@ -5,7 +5,7 @@
 # image pritunl/archlinux.
 # It is provided for those on 32-bit system or don't want to use
 # If you encounter an issue don't hesitate to supply a patch on github.
-# TODO :  Add function for installing haskell dependencies.
+# NOTE: Haskell dependencies available via: ghc cabal-install stack
 # trap errors
 set -e
 
