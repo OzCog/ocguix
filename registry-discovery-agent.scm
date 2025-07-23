@@ -362,7 +362,7 @@
                                                          (time-utc->date 
                                                            (make-time time-utc 0 
                                                                       (+ (time-second (current-time)) 86400)))
-                                                         "~Y-~m-~dT~H:~M:~S~z"))))))))
+                                                         "~Y-~m-~dT~H:~M:~S~z")))))))
 
 (define (write-registry-listing filename)
   "Write registry listing to JSON file"
