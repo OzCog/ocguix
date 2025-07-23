@@ -111,6 +111,13 @@
 ;; Export public interface
 (export registry-node
         make-registry-node
+        registry-node?
+        registry-node-id
+        registry-node-url
+        registry-node-categories
+        registry-node-attributes
+        registry-node-tensor-shape
+        registry-node-metadata
         registry-catalog
         export-registry-hypergraph
         find-registry-by-id
