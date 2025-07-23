@@ -1,0 +1,88 @@
+name: 🧠 New Package Request
+description: Request integration of a new package into the cognitive ecosystem
+title: "[PACKAGE] "
+labels: ["new-package", "cognitive-integration", "enhancement"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Cognitive Package Integration Request
+        
+        Welcome to the meta-framework for cognitive package management! This template helps integrate new packages into our hypergraph-based ecosystem.
+
+  - type: input
+    id: package_name
+    attributes:
+      label: Package Name
+      description: Name of the package to integrate
+      placeholder: e.g., atomspace-bridge, ggml-kernel, cognitive-agent
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package_category
+    attributes:
+      label: Cognitive Subsystem
+      description: Which cognitive subsystem does this package primarily support?
+      options:
+        - Memory System (AtomSpace, knowledge graphs)
+        - Task System (workflows, automation)
+        - AI System (machine learning, reasoning)
+        - Autonomy System (self-modification, meta-cognition)
+        - Infrastructure (Guix, build tools)
+    validations:
+      required: true
+
+  - type: textarea
+    id: package_description
+    attributes:
+      label: Package Description
+      description: Describe the package's purpose and cognitive capabilities
+      placeholder: |
+        Explain what this package does and how it fits into the cognitive ecosystem.
+        Include any special requirements or dependencies.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List the package dependencies
+      placeholder: |
+        - core-dependency-1
+        - optional-dependency-2
+        - guix-package-3
+
+  - type: textarea
+    id: hypergraph_representation
+    attributes:
+      label: Hypergraph Representation
+      description: Describe how this package fits into the cognitive hypergraph
+      placeholder: |
+        ```scheme
+        (package-node "your-package-name"
+          (list 'DEPENDENCIES '("dep1" "dep2"))
+          (list 'VERSION "1.0.0")
+          (list 'COGNITIVE-ROLE "description")
+          (list 'TENSOR-SHAPE (list dep-count version-complexity cognitive-load)))
+        ```
+
+  - type: checkboxes
+    id: integration_checklist
+    attributes:
+      label: Integration Checklist
+      description: Mark the integration steps you're willing to help with
+      options:
+        - label: Create Guix package definition
+        - label: Write integration tests
+        - label: Update documentation
+        - label: Add hypergraph schema
+        - label: Implement cognitive hooks
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about this package integration
