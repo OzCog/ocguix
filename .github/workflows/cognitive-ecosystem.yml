@@ -1,5 +1,9 @@
 name: 'Cognitive Ecosystem: Issue Generation Meta-Framework'
 
+permissions:
+  contents: read
+  issues: write
+
 on:
   push:
     branches: [ main, master ]
