@@ -3,3 +3,10 @@
 node_modules/
 cognitive-packages/
 *.tmp
+# KoboldCpp generated files
+models/
+koboldcpp/
+nohup.out
+*.log
+# Generated cognitive agents
+distributed-cognitive-grammar-agent.scm

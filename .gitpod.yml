@@ -1,0 +1,85 @@
+# Gitpod Configuration for OpenCog Cognitive Ecosystem
+# Addresses issue #69: docker pull gitpod/workspace-python-3.10:2025-07-23-06-50-33
+# Part of madness meta-issue #68
+
+image: gitpod/workspace-python-3.10:2025-07-23-06-50-33
+
+# Configure the workspace with required tools and dependencies
+tasks:
+  - name: "Setup Cognitive Ecosystem"
+    init: |
+      # Install system dependencies
+      sudo apt-get update
+      sudo apt-get install -y build-essential cmake make pkg-config wget curl git
+      
+      # Install Guile for cognitive agents
+      sudo apt-get install -y guile-3.0 guile-3.0-dev
+      
+      # Install Python dependencies for agent integration
+      pip install requests flask fastapi uvicorn numpy scipy
+      
+      # Make scripts executable
+      chmod +x *.sh *.scm
+      
+      # Download KoboldCpp and prepare environment
+      echo "🤖 Setting up KoboldCpp environment..."
+      ./koboldcpp-setup.sh --setup-only
+      
+    command: |
+      echo "🧠 OpenCog Cognitive Ecosystem Ready!"
+      echo "=================================================="
+      echo ""
+      echo "Available tools:"
+      echo "  • koboldcpp-setup.sh - Complete KoboldCpp setup and server"
+      echo "  • cognitive-grammar-integration-agent.scm - Distributed cognitive grammar"
+      echo "  • ocpkg - OpenCog package management"
+      echo "  • demo-cognitive-flowchart.sh - Cognitive pipeline demo"
+      echo ""
+      echo "Quick start:"
+      echo "  1. Run: ./koboldcpp-setup.sh"
+      echo "  2. Access web interface via port 5001"
+      echo "  3. Test cognitive grammar: ./cognitive-grammar-integration-agent.scm --test"
+      echo ""
+      echo "📋 See TECHNICAL-ARCHITECTURE.md for detailed documentation"
+
+  - name: "KoboldCpp Server"
+    command: |
+      echo "⏳ Waiting for initial setup to complete..."
+      sleep 30
+      echo "🚀 Starting KoboldCpp server..."
+      ./koboldcpp-setup.sh --start-only
+
+# Port configuration for KoboldCpp server
+ports:
+  - port: 5001
+    onOpen: open-browser
+    name: "KoboldCpp Web Interface"
+    description: "Language model inference server with web UI"
+    protocol: http
+
+# GitHub integration
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    addCheck: true
+    addComment: true
+    addBadge: true
+
+# VS Code extensions for development
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-python.flake8
+    - ms-vscode.makefile-tools
+    - redhat.vscode-yaml
+    - ms-vscode.vscode-json
+    - formulahendry.auto-rename-tag
+
+# Environment variables
+env:
+  OPENCOG_ECOSYSTEM: "true"
+  KOBOLDCPP_PORT: "5001"
+  COGNITIVE_GRAMMAR_AGENT: "distributed-cognitive-grammar-agent.scm"
+  GITPOD_WORKSPACE_TYPE: "cognitive-ecosystem"

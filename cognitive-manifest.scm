@@ -1,5 +1,6 @@
 ;; Guix manifest for cognitive ecosystem
 ;; Use with: guix install -m cognitive-manifest.scm
+;; Updated for madness issue #68 - includes AI model and KoboldCpp dependencies
 
 (specifications->manifest
   '(;; Core build tools
@@ -13,6 +14,7 @@
     "guile-dev"
     "python"
     "python-pip"
+    "python-requests"  ; For KoboldCpp API integration
     
     ;; Cognitive framework dependencies
     "git"
@@ -23,6 +25,28 @@
     "boost"
     "cxxtest"
     
+    ;; AI/ML model infrastructure (issue #68, #74)
+    "python-numpy"
+    "python-scipy"
+    "python-flask"      ; KoboldCpp web interface
+    "python-fastapi"    ; Alternative API framework
+    
+    ;; Agent-zero integration dependencies (issue #70)
+    "python-asyncio"
+    "python-json"
+    
+    ;; Distributed cognitive grammar (issue #77)
+    "guile-json"        ; JSON processing in Scheme
+    "guile-web"         ; HTTP client capabilities
+    
+    ;; Documentation generation (issue #78)
+    "graphviz"          ; For mermaid diagram rendering
+    "pandoc"            ; Documentation processing
+    
     ;; Meta-cognitive tools
     "emacs"
-    "vim"))
+    "vim"
+    
+    ;; Container/workspace support (issue #69)
+    "docker"
+    "docker-compose"))
