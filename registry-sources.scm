@@ -7,6 +7,7 @@
 
 (use-modules 
   (srfi srfi-1)
+  (srfi srfi-9)
   (ice-9 match))
 
 ;; Registry node definition following cognitive grammar
@@ -110,6 +111,13 @@
 ;; Export public interface
 (export registry-node
         make-registry-node
+        registry-node?
+        registry-node-id
+        registry-node-url
+        registry-node-categories
+        registry-node-attributes
+        registry-node-tensor-shape
+        registry-node-metadata
         registry-catalog
         export-registry-hypergraph
         find-registry-by-id

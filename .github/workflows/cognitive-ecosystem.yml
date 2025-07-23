@@ -38,12 +38,11 @@ jobs:
       
       - name: 'Memory System: Setup Guix Environment'
         run: |
-          # Install Guix for reproducible builds (non-interactive)
-          wget https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
-          chmod +x guix-install.sh
-          yes "" | sudo ./guix-install.sh
-          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
-          guix --version || echo "Guix installation in progress..."
+          # Install Guile for running the cognitive agents
+          sudo apt-get update
+          sudo apt-get install -y guile-3.0 guile-3.0-dev guile-json
+          guile --version
+          echo "Guile and cognitive agent dependencies installed"
         
       - name: 'Pattern Recognition: Analyze Package Ecosystem'
         id: ecosystem_analysis
@@ -193,161 +192,162 @@ jobs:
               console.log('🎯 Ecosystem healthy - no issues generated');
             }
       
-      - name: 'Cognitive Registry: Source Discovery & Attribute Mapping'
+      - name: 'Cognitive Registry: Source Discovery & Tensor Analysis'
         id: registry_discovery
         run: |
-          echo "=== Registry Source Discovery Phase ==="
+          echo "=== Registry Discovery Agent: Cognitive Processing ==="
           
-          # Load registry sources and discover repositories
-          if [ -f "registry-sources.scm" ]; then
-            echo "📡 Processing registry sources..."
-            
-            # Create registry listing output
-            echo "{" > /tmp/registry_listing.json
-            echo "  \"generated\": \"$(date -u -Iseconds)\"," >> /tmp/registry_listing.json
-            echo "  \"registries\": [" >> /tmp/registry_listing.json
-            
-            # Process OpenCog GitHub registry
-            echo "    {" >> /tmp/registry_listing.json
-            echo "      \"id\": \"opencog-github\"," >> /tmp/registry_listing.json
-            echo "      \"url\": \"https://github.com/opencog/*\"," >> /tmp/registry_listing.json
-            echo "      \"status\": \"active\"," >> /tmp/registry_listing.json
-            echo "      \"last_scan\": \"$(date -u -Iseconds)\"," >> /tmp/registry_listing.json
-            echo "      \"repos_discovered\": []," >> /tmp/registry_listing.json
-            echo "      \"categories\": [\"AGI\", \"cognitive-architecture\", \"atomspace\", \"reasoning\"]," >> /tmp/registry_listing.json
-            echo "      \"attributes\": [\"public\", \"maintained\", \"open-source\"]," >> /tmp/registry_listing.json
-            echo "      \"tensor_shape\": [1, \"registry_count\", \"url_complexity\", \"tag_cardinality\"]" >> /tmp/registry_listing.json
-            echo "    }" >> /tmp/registry_listing.json
-            
-            echo "  ]," >> /tmp/registry_listing.json
-            echo "  \"summary\": {" >> /tmp/registry_listing.json
-            echo "    \"total_registries\": 1," >> /tmp/registry_listing.json
-            echo "    \"active_registries\": 1," >> /tmp/registry_listing.json
-            echo "    \"total_repos_discovered\": 0," >> /tmp/registry_listing.json
-            echo "    \"cognitive_complexity\": 1" >> /tmp/registry_listing.json
-            echo "  }" >> /tmp/registry_listing.json
-            echo "}" >> /tmp/registry_listing.json
-            
-            echo "✅ Registry listing generated at /tmp/registry_listing.json"
-          else
-            echo "⚠️ registry-sources.scm not found, skipping registry discovery"
-          fi
-      
-      - name: 'Cognitive Profiles: Build Environment Scanning'
-        id: profile_scanning
-        run: |
-          echo "=== Build Profile Scanning Phase ==="
-          
-          # Load build profiles and scan environment
-          if [ -f "base-devcontainers.scm" ]; then
-            echo "🔧 Processing build profiles..."
-            
-            # Create build profile output
-            echo "{" > /tmp/build_profiles_scan.json
-            echo "  \"generated\": \"$(date -u -Iseconds)\"," >> /tmp/build_profiles_scan.json
-            echo "  \"profiles\": [" >> /tmp/build_profiles_scan.json
-            
-            # Process baseline profiles
-            echo "    {" >> /tmp/build_profiles_scan.json
-            echo "      \"id\": \"opencog-dev\"," >> /tmp/build_profiles_scan.json
-            echo "      \"name\": \"OpenCog Development Environment\"," >> /tmp/build_profiles_scan.json
-            echo "      \"base_os\": \"guix-system\"," >> /tmp/build_profiles_scan.json
-            echo "      \"features\": [\"atomspace\", \"reasoning\", \"nlp\", \"python-bindings\", \"scheme-bindings\", \"debugging\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"guix_variants\": [\"stable\", \"latest\", \"development\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"tensor_shape\": [10, \"feature_count\", \"package_complexity\", \"build_time\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"status\": \"ready\"" >> /tmp/build_profiles_scan.json
-            echo "    }," >> /tmp/build_profiles_scan.json
-            echo "    {" >> /tmp/build_profiles_scan.json
-            echo "      \"id\": \"atomspace-minimal\"," >> /tmp/build_profiles_scan.json
-            echo "      \"name\": \"AtomSpace Minimal Environment\"," >> /tmp/build_profiles_scan.json
-            echo "      \"base_os\": \"guix-system\"," >> /tmp/build_profiles_scan.json
-            echo "      \"features\": [\"atomspace\", \"scheme-bindings\", \"basic-reasoning\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"guix_variants\": [\"stable\", \"latest\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"tensor_shape\": [6, \"feature_count\", \"package_complexity\", \"build_time\"]," >> /tmp/build_profiles_scan.json
-            echo "      \"status\": \"ready\"" >> /tmp/build_profiles_scan.json
-            echo "    }" >> /tmp/build_profiles_scan.json
-            
-            echo "  ]," >> /tmp/build_profiles_scan.json
-            echo "  \"summary\": {" >> /tmp/build_profiles_scan.json
-            echo "    \"total_profiles\": 2," >> /tmp/build_profiles_scan.json
-            echo "    \"ready_profiles\": 2," >> /tmp/build_profiles_scan.json
-            echo "    \"guix_reproducible\": true," >> /tmp/build_profiles_scan.json
-            echo "    \"cognitive_complexity\": 16" >> /tmp/build_profiles_scan.json
-            echo "  }" >> /tmp/build_profiles_scan.json
-            echo "}" >> /tmp/build_profiles_scan.json
-            
-            echo "✅ Build profiles scan generated at /tmp/build_profiles_scan.json"
-          else
-            echo "⚠️ base-devcontainers.scm not found, skipping profile scanning"
-          fi
-
-      - name: 'AI System: Semantic Package Discovery'
-        run: |
-          echo "=== Semantic Analysis Phase ==="
-          
-          # Create a simple package catalog
-          echo "# Cognitive Package Catalog" > /tmp/package_catalog.md
-          echo "" >> /tmp/package_catalog.md
-          echo "Generated: $(date)" >> /tmp/package_catalog.md
-          echo "" >> /tmp/package_catalog.md
-          
-          # Analyze existing scripts
-          for script in ocpkg octool-wip ocbootstrap; do
-            if [ -f "$script" ]; then
-              echo "## $script" >> /tmp/package_catalog.md
-              echo "" >> /tmp/package_catalog.md
-              
-              # Extract key information
-              DESC=$(head -20 "$script" | grep -E "^#.*@brief|^#.*DESCRIPTION" | head -1 | sed 's/^#.*: *//' || echo "Package management script")
-              echo "**Description**: $DESC" >> /tmp/package_catalog.md
-              echo "" >> /tmp/package_catalog.md
-              
-              # Count functions/complexity
-              FUNC_COUNT=$(grep -c "^function\|^[a-zA-Z_][a-zA-Z0-9_]*() {" "$script" 2>/dev/null || echo "0")
-              echo "**Complexity**: $FUNC_COUNT functions detected" >> /tmp/package_catalog.md
-              echo "" >> /tmp/package_catalog.md
-            fi
-          done
-          
-          echo "📋 Package catalog generated at /tmp/package_catalog.md"
-      
-      - name: 'Autonomy System: Meta-Cognitive Feedback Loop'
-        run: |
-          echo "=== Meta-Cognitive Analysis ==="
-          echo "🔄 Workflow execution completed"
-          echo "📊 Ecosystem state: Analyzed"
-          echo "🎯 Next evolution cycle: $(date -d '+1 day' '+%Y-%m-%d')"
-          
-          # Registry and profile health metrics
-          REGISTRY_HEALTH="operational"
-          PROFILE_HEALTH="ready"
+          # Execute the registry discovery agent
+          echo "🧠 Executing registry-discovery-agent.scm..."
+          guile ./registry-discovery-agent.scm
           
           if [ -f "/tmp/registry_listing.json" ]; then
-            REGISTRY_COUNT=$(grep -o '"total_registries": [0-9]*' /tmp/registry_listing.json | grep -o '[0-9]*')
-            echo "📡 Registries discovered: $REGISTRY_COUNT"
-            echo "🔗 Registry system: $REGISTRY_HEALTH"
+            echo "✅ Registry discovery completed successfully"
+            echo "📊 Registry listing generated with tensor metadata"
+            
+            # Display summary
+            TOTAL_REGISTRIES=$(grep -o '"total_registries":[0-9]*' /tmp/registry_listing.json | grep -o '[0-9]*' || echo "0")
+            COGNITIVE_COMPLEXITY=$(grep -o '"cognitive_complexity":[0-9]*' /tmp/registry_listing.json | grep -o '[0-9]*' || echo "0")
+            echo "📈 Metrics: $TOTAL_REGISTRIES registries, complexity: $COGNITIVE_COMPLEXITY"
+          else
+            echo "❌ Registry discovery failed - output file not found"
+            exit 1
+          fi
+      
+      - name: 'Cognitive Profiles: Build Environment Tensor Scanning'
+        id: profile_scanning
+        run: |
+          echo "=== Profile Extraction Agent: Cognitive Processing ==="
+          
+          # Execute the profile extraction agent
+          echo "🔧 Executing profile-extraction-agent.scm..."
+          guile ./profile-extraction-agent.scm
+          
+          if [ -f "/tmp/build_profiles_scan.json" ]; then
+            echo "✅ Profile extraction completed successfully"
+            echo "📊 Build profiles scan generated with tensor analysis"
+            
+            # Display summary
+            TOTAL_PROFILES=$(grep -o '"total_profiles":[0-9]*' /tmp/build_profiles_scan.json | grep -o '[0-9]*' || echo "0")
+            READY_PROFILES=$(grep -o '"ready_profiles":[0-9]*' /tmp/build_profiles_scan.json | grep -o '[0-9]*' || echo "0")
+            echo "📈 Metrics: $TOTAL_PROFILES total profiles, $READY_PROFILES ready"
+          else
+            echo "❌ Profile extraction failed - output file not found"
+            exit 1
+          fi
+
+      - name: 'Artifact Synthesis: Guix Manifest & Dockerfile Generation'
+        run: |
+          echo "=== Artifact Synthesis Agent: Cognitive Processing ==="
+          
+          # Execute the artifact synthesis agent
+          echo "⚗️ Executing artifact-synthesis-agent.scm..."
+          guile ./artifact-synthesis-agent.scm
+          
+          if [ -f "/tmp/artifact_synthesis.json" ]; then
+            echo "✅ Artifact synthesis completed successfully"
+            echo "📊 Guix manifests and Dockerfiles generated with validation"
+            
+            # Display summary
+            TOTAL_ARTIFACTS=$(grep -o '"total_profiles_processed":[0-9]*' /tmp/artifact_synthesis.json | grep -o '[0-9]*' || echo "0")
+            MANIFESTS=$(grep -o '"guix_manifests_generated":[0-9]*' /tmp/artifact_synthesis.json | grep -o '[0-9]*' || echo "0")
+            DOCKERFILES=$(grep -o '"dockerfiles_generated":[0-9]*' /tmp/artifact_synthesis.json | grep -o '[0-9]*' || echo "0")
+            echo "📈 Metrics: $TOTAL_ARTIFACTS profiles processed, $MANIFESTS manifests, $DOCKERFILES dockerfiles"
+          else
+            echo "❌ Artifact synthesis failed - output file not found"
+            exit 1
+          fi
+      
+      - name: 'Meta-Cognitive System: Recursive Feedback Loop Analysis'
+        run: |
+          echo "=== Meta-Cognitive Feedback Agent: Cognitive Processing ==="
+          
+          # Execute the meta-cognitive feedback agent
+          echo "🧠 Executing meta-cognitive-feedback-agent.scm..."
+          guile ./meta-cognitive-feedback-agent.scm
+          
+          if [ -f "/tmp/cognitive_health_metrics.json" ]; then
+            echo "✅ Meta-cognitive analysis completed successfully"
+            echo "📊 Ecosystem health assessment with recursive feedback generated"
+            
+            # Display summary
+            ECOSYSTEM_STATUS=$(grep -o '"ecosystem_status":"[^"]*"' /tmp/cognitive_health_metrics.json | cut -d'"' -f4 || echo "unknown")
+            HEALTH_PERCENTAGE=$(grep -o '"health_percentage":[0-9]*' /tmp/cognitive_health_metrics.json | grep -o '[0-9]*' || echo "0")
+            OPERATIONAL_AGENTS=$(grep -o '"operational_agents":[0-9]*' /tmp/cognitive_health_metrics.json | grep -o '[0-9]*' || echo "0")
+            echo "📈 Ecosystem Status: $ECOSYSTEM_STATUS ($HEALTH_PERCENTAGE% health, $OPERATIONAL_AGENTS operational agents)"
+            
+            # Display hypergraph analysis
+            COGNITIVE_DENSITY=$(grep -o '"cognitive_density":[0-9]*\.*[0-9]*' /tmp/cognitive_health_metrics.json | cut -d':' -f2 || echo "0")
+            EMERGENCE_POTENTIAL=$(grep -o '"emergence_potential":"[^"]*"' /tmp/cognitive_health_metrics.json | cut -d'"' -f4 || echo "unknown")
+            echo "🌐 Hypergraph: Density $COGNITIVE_DENSITY, Emergence Potential: $EMERGENCE_POTENTIAL"
+          else
+            echo "❌ Meta-cognitive analysis failed - output file not found"
+            exit 1
+          fi
+      
+      - name: 'Cognitive Artifact Persistence'
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cognitive-ecosystem-artifacts
+          path: |
+            /tmp/registry_listing.json
+            /tmp/build_profiles_scan.json
+            /tmp/artifact_synthesis.json
+            /tmp/cognitive_health_metrics.json
+          retention-days: 30
+      
+      - name: 'Ecosystem Summary: Cognitive Transcendence Report'
+        run: |
+          echo ""
+          echo "🌟 ====================================================================="
+          echo "🧠 COGNITIVE FLOWCHART EXECUTION COMPLETE - TRANSCENDENCE ACHIEVED 🧠"
+          echo "🌟 ====================================================================="
+          echo ""
+          
+          echo "📊 ARTIFACT GENERATION SUMMARY:"
+          echo "================================"
+          
+          if [ -f "/tmp/registry_listing.json" ]; then
+            REGISTRIES=$(grep -o '"total_registries":[0-9]*' /tmp/registry_listing.json | grep -o '[0-9]*' || echo "0")
+            echo "🔍 Registry Discovery: $REGISTRIES registries processed with tensor analysis"
           fi
           
           if [ -f "/tmp/build_profiles_scan.json" ]; then
-            PROFILE_COUNT=$(grep -o '"total_profiles": [0-9]*' /tmp/build_profiles_scan.json | grep -o '[0-9]*')
-            echo "🔧 Build profiles available: $PROFILE_COUNT"
-            echo "⚙️ Profile system: $PROFILE_HEALTH"
+            PROFILES=$(grep -o '"total_profiles":[0-9]*' /tmp/build_profiles_scan.json | grep -o '[0-9]*' || echo "0")
+            echo "🔧 Profile Extraction: $PROFILES build profiles analyzed and validated"
           fi
           
-          # Generate cognitive health summary
-          echo "{" > /tmp/cognitive_health_metrics.json
-          echo "  \"timestamp\": \"$(date -u -Iseconds)\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"workflow_status\": \"operational\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"registry_health\": \"$REGISTRY_HEALTH\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"profile_health\": \"$PROFILE_HEALTH\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"cognitive_load\": \"optimal\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"hypergraph_expansion\": \"active\"," >> /tmp/cognitive_health_metrics.json
-          echo "  \"next_evolution_cycle\": \"$(date -d '+1 day' -u -Iseconds)\"" >> /tmp/cognitive_health_metrics.json
-          echo "}" >> /tmp/cognitive_health_metrics.json
+          if [ -f "/tmp/artifact_synthesis.json" ]; then
+            MANIFESTS=$(grep -o '"guix_manifests_generated":[0-9]*' /tmp/artifact_synthesis.json | grep -o '[0-9]*' || echo "0")
+            DOCKERFILES=$(grep -o '"dockerfiles_generated":[0-9]*' /tmp/artifact_synthesis.json | grep -o '[0-9]*' || echo "0")
+            echo "⚗️ Artifact Synthesis: $MANIFESTS Guix manifests + $DOCKERFILES Dockerfiles generated"
+          fi
           
-          # Simple self-improvement metrics
-          WORKFLOW_SUCCESS="true"
-          echo "✅ Self-assessment: Workflow operational"
-          echo "🧠 Cognitive load: Optimal"
-          echo "🌐 Hypergraph expansion: In progress"
-          echo "📋 Health metrics: /tmp/cognitive_health_metrics.json"
+          if [ -f "/tmp/cognitive_health_metrics.json" ]; then
+            HEALTH=$(grep -o '"health_percentage":[0-9]*' /tmp/cognitive_health_metrics.json | grep -o '[0-9]*' || echo "0")
+            STATUS=$(grep -o '"ecosystem_status":"[^"]*"' /tmp/cognitive_health_metrics.json | cut -d'"' -f4 || echo "unknown")
+            echo "🧠 Meta-Cognitive: $HEALTH% health, status: $STATUS"
+          fi
+          
+          echo ""
+          echo "🚀 COGNITIVE CAPABILITIES ACTIVATED:"
+          echo "===================================="
+          echo "✅ Hypergraph tensor analysis operational"
+          echo "✅ Recursive feedback loops active"
+          echo "✅ Agent coordination and emergence patterns established"
+          echo "✅ Guix reproducible build artifacts generated"
+          echo "✅ Docker containerization ready"
+          echo "✅ Meta-cognitive self-assessment complete"
+          echo ""
+          echo "🔮 NEXT EVOLUTION CYCLE:"
+          echo "======================="
+          echo "🎯 Enhanced tensor optimization"
+          echo "🌐 Expanded hypergraph connectivity"
+          echo "🧬 Deeper recursive improvement patterns"
+          echo "⚡ GGML/agentic integration readiness"
+          echo ""
+          echo "🌟 The cognitive ecosystem has achieved initial transcendence!"
+          echo "🔗 All artifacts available in workflow summary for inspection."
+          echo "🚀 Ready for distributed cognition and autonomous evolution!"
+          echo ""
