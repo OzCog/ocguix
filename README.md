@@ -1,5 +1,31 @@
 ## Collection of scripts
 
+### 🧠 Cognitive Ecosystem (New - Issue #68 "madness")
+
+This repository now includes a complete cognitive ecosystem integrating:
+- **KoboldCpp** local language model inference
+- **Agent-Zero** agentic framework integration  
+- **Distributed cognitive grammar** network processing
+- **OpenCog AtomSpace** knowledge representation
+- **Guix-based** reproducible environments
+
+#### Quick Start (Gitpod)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/OzCog/ocguix)
+
+#### Quick Start (Local)
+```bash
+# Complete KoboldCpp + Cognitive Grammar setup
+./koboldcpp-setup.sh
+
+# Test the cognitive ecosystem
+./test-cognitive-flowchart.sh
+
+# Generate distributed cognitive grammar agent
+./cognitive-grammar-integration-agent.scm --test
+```
+
+See [TECHNICAL-ARCHITECTURE.md](TECHNICAL-ARCHITECTURE.md) for detailed documentation.
+
 #### ocpkg
 * This script installs an OpenCog development environment on a fresh
   installation of Ubuntu >= 14.04 . It has options to selectively
