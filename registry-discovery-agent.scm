@@ -144,12 +144,42 @@
       (format #t "Warning: Failed to parse GitHub JSON response: ~a~%" key)
       '())))
 
-;; Temporarily disable this function to test syntax
 (define (discover-github-repos org-name)
   "Discover repositories from a GitHub organization using API"
-  (if (string=? org-name "opencog")
-      '("atomspace" "opencog" "cogutil" "moses" "relex" "link-grammar")
-      '()))
+  (catch #t
+    (lambda ()
+      (let* ((api-url (string-append "https://api.github.com/orgs/" org-name "/repos?per_page=100"))
+             (response (http-get (string->uri api-url)
+                                #:headers '((User-Agent . "OCGuix-Discovery-Agent/1.0")))))
+        (if (= (response-code response) 200)
+            (let* ((response-body (utf8->string (response-body response)))
+                   (discovered-repos (parse-github-json-response response-body)))
+              (if (not (null? discovered-repos))
+                  (begin
+                    (format #t "✅ Successfully discovered ~a repositories from GitHub API for ~a~%" 
+                            (length discovered-repos) org-name)
+                    discovered-repos)
+                  ;; Fallback to known repos if parsing failed
+                  (begin
+                    (format #t "⚠️  API response parsing failed, using fallback data for ~a~%" org-name)
+                    (if (string=? org-name "opencog")
+                        '("atomspace" "opencog" "cogutil" "moses" "relex" "link-grammar" 
+                          "cogserver" "attention" "pln" "spacetime" "learn" "generate"
+                          "vision" "motor" "sensory" "unify" "benchmark" "agi-bio")
+                        '()))))
+            ;; Fallback for API failures
+            (begin
+              (format #t "⚠️  GitHub API request failed (status: ~a), using fallback data for ~a~%" 
+                      (response-code response) org-name)
+              (if (string=? org-name "opencog")
+                  '("atomspace" "opencog" "cogutil" "moses" "relex" "link-grammar")
+                  '())))))
+    (lambda (key . args)
+      ;; Error handling: return known repos as fallback
+      (format #t "❌ GitHub API error for ~a: ~a, using fallback data~%" org-name key)
+      (if (string=? org-name "opencog")
+          '("atomspace" "opencog" "cogutil" "moses" "relex" "link-grammar")
+          '()))))
 
 (define (scan-guix-packages-from-git)
   "Scan Guix packages from the Git repository API"
@@ -162,18 +192,17 @@
         (filter (lambda (file)
                  (catch #t
                    (lambda ()
-                     (let* ((url (string-append base-url file)))
-                       (receive (response body)
-                                (http-get (string->uri url)
-                                         #:headers '((User-Agent . "OCGuix-Discovery-Agent/1.0")))
-                         (if (= (response-code response) 200)
+                     (let* ((url (string-append base-url file))
+                            (response (http-get (string->uri url)
+                                              #:headers '((User-Agent . "OCGuix-Discovery-Agent/1.0")))))
+                       (if (= (response-code response) 200)
                            (begin
                              (format #t "✅ Found Guix package file: ~a~%" file)
                              #t)
                            (begin
                              (format #t "⚠️  Guix package file not accessible: ~a (status: ~a)~%" 
                                      file (response-code response))
-                             #f)))))
+                             #f))))
                    (lambda (key . args)
                      (format #t "❌ Error accessing Guix package file ~a: ~a~%" file key)
                      #f)))
@@ -182,10 +211,24 @@
       (format #t "❌ Guix package scanning failed: ~a~%" key)
       '())))
 
-;; Temporarily disable this function to test syntax
 (define (discover-guix-packages)
   "Discover Guix packages related to AI and cognitive computing"
-  '("gnu/packages/ai.scm" "gnu/packages/scheme.scm" "gnu/packages/cpp.scm"))
+  (catch #t
+    (lambda ()
+      (let ((scanned-packages (scan-guix-packages-from-git)))
+        (if (not (null? scanned-packages))
+            (begin
+              (format #t "✅ Successfully discovered ~a Guix package files~%" (length scanned-packages))
+              (map (lambda (file) (string-append "gnu/packages/" file)) scanned-packages))
+            ;; Fallback to known relevant packages
+            (begin
+              (format #t "⚠️  Guix scanning failed, using fallback data~%")
+              '("gnu/packages/ai.scm" "gnu/packages/scheme.scm" "gnu/packages/cpp.scm"
+                "gnu/packages/machine-learning.scm" "gnu/packages/python-science.scm"
+                "gnu/packages/maths.scm" "gnu/packages/statistics.scm")))))
+    (lambda (key . args)
+      (format #t "❌ Guix package discovery failed: ~a, using fallback data~%" key)
+      '("gnu/packages/ai.scm" "gnu/packages/scheme.scm" "gnu/packages/cpp.scm"))))
 
 (define (parse-julia-registry-toml response-body)
   "Parse Julia registry TOML response to extract package names"
@@ -209,10 +252,53 @@
       (format #t "Warning: Failed to parse Julia registry TOML: ~a~%" key)
       '())))
 
-;; Temporarily disable this function to test syntax
 (define (discover-julia-packages)
   "Discover Julia packages from Julia ecosystem registries"
-  '("MLJ.jl" "Flux.jl" "DataFrames.jl"))
+  (catch #t
+    (lambda ()
+      ;; Try to access the General Julia registry
+      (let* ((registry-url "https://raw.githubusercontent.com/JuliaRegistries/General/master/Registry.toml")
+             (response (http-get (string->uri registry-url)
+                               #:headers '((User-Agent . "OCGuix-Discovery-Agent/1.0")))))
+        (if (= (response-code response) 200)
+            (let* ((response-body (utf8->string (response-body response)))
+                   (discovered-packages (parse-julia-registry-toml response-body)))
+              (if (not (null? discovered-packages))
+                  (begin
+                    (format #t "✅ Successfully discovered ~a packages from Julia General registry~%" 
+                            (length discovered-packages))
+                    ;; Filter to ML/AI related packages and limit to reasonable number
+                    (let ((relevant-packages 
+                           (filter (lambda (pkg)
+                                    (or (string-contains-ci pkg "ML")
+                                        (string-contains-ci pkg "Flux")
+                                        (string-contains-ci pkg "Knet")
+                                        (string-contains-ci pkg "Data")
+                                        (string-contains-ci pkg "Stats")
+                                        (string-contains-ci pkg "Distributions")
+                                        (string-contains-ci pkg "Plots")))
+                                  discovered-packages)))
+                      (if (not (null? relevant-packages))
+                          (take relevant-packages (min (length relevant-packages) 15))
+                          ;; If no relevant packages found, use fallback
+                          (begin
+                            (format #t "⚠️  No relevant packages found in discovery, using fallback~%")
+                            '("MLJ.jl" "Flux.jl" "Knet.jl" "MLDatasets.jl" "StatsModels.jl"
+                              "Distributions.jl" "Plots.jl" "DataFrames.jl")))))
+                  ;; Fallback if parsing failed
+                  (begin
+                    (format #t "⚠️  Julia registry parsing failed, using fallback data~%")
+                    '("MLJ.jl" "Flux.jl" "Knet.jl" "MLDatasets.jl" "StatsModels.jl"
+                      "Distributions.jl" "Plots.jl" "DataFrames.jl"))))
+            ;; Fallback for API failures
+            (begin
+              (format #t "⚠️  Julia registry request failed (status: ~a), using fallback data~%" 
+                      (response-code response))
+              '("MLJ.jl" "Flux.jl" "Knet.jl" "MLDatasets.jl" "StatsModels.jl"
+                "Distributions.jl" "Plots.jl" "DataFrames.jl")))))
+    (lambda (key . args)
+      (format #t "❌ Julia package discovery failed: ~a, using fallback data~%" key)
+      '("MLJ.jl" "Flux.jl" "DataFrames.jl"))))
 
 (define (discover-packages-for-registry node)
   "Discover packages for a specific registry node"
