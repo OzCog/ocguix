@@ -1,0 +1,91 @@
+name: 🔧 Build Failure Report
+description: Report a build failure in the cognitive ecosystem
+title: "[BUILD-FAILURE] "
+labels: ["build-failure", "urgent", "automated-issue"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Build Failure Alert
+        
+        This template captures build failures in our cognitive package management system.
+
+  - type: input
+    id: failed_package
+    attributes:
+      label: Failed Package
+      description: Which package failed to build?
+      placeholder: e.g., ocpkg, octool-wip, custom-agent
+    validations:
+      required: true
+
+  - type: dropdown
+    id: failure_stage
+    attributes:
+      label: Failure Stage
+      description: At which stage did the build fail?
+      options:
+        - Environment Setup
+        - Dependency Resolution
+        - Compilation
+        - Testing
+        - Installation
+        - Guix Build
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_log
+    attributes:
+      label: Error Log
+      description: Paste the error log or relevant output
+      placeholder: |
+        ```
+        Paste error messages, stack traces, or build output here
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment_info
+    attributes:
+      label: Environment Information
+      description: Provide details about the build environment
+      placeholder: |
+        - OS: Ubuntu 22.04
+        - Guix version: 1.4.0
+        - Agent: build-agent-01
+        - Commit SHA: abc123
+
+  - type: textarea
+    id: hypergraph_impact
+    attributes:
+      label: Hypergraph Impact Analysis
+      description: How does this failure affect the cognitive ecosystem?
+      placeholder: |
+        ```scheme
+        (failure-node "build-failure"
+          (list 'PACKAGE failed-package)
+          (list 'IMPACT '("downstream-deps" "agent-functionality"))
+          (list 'SEVERITY "high")
+          (list 'RECOVERY-PROTOCOL "auto-retry-with-fallback"))
+        ```
+
+  - type: checkboxes
+    id: recovery_actions
+    attributes:
+      label: Recovery Actions
+      description: Select potential recovery actions
+      options:
+        - label: Retry build with clean environment
+        - label: Update dependencies
+        - label: Rollback to previous working version
+        - label: Invoke alternative build agent
+        - label: Manual intervention required
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about this failure

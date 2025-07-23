@@ -1,0 +1,103 @@
+name: 🤖 Agent Registration
+description: Register a new cognitive agent in the ecosystem
+title: "[AGENT] "
+labels: ["agent-registration", "cognitive-system", "enhancement"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Cognitive Agent Registration
+        
+        Register a new autonomous agent in our distributed cognitive ecosystem.
+
+  - type: input
+    id: agent_name
+    attributes:
+      label: Agent Name
+      description: Unique identifier for the cognitive agent
+      placeholder: e.g., build-orchestrator-01, package-discovery-bot, meta-optimizer
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent_type
+    attributes:
+      label: Agent Type
+      description: What type of cognitive agent is this?
+      options:
+        - Build Agent (compilation, testing)
+        - Discovery Agent (package finding, analysis)
+        - Optimization Agent (performance, efficiency)
+        - Meta-Agent (system modification, evolution)
+        - Monitoring Agent (health checks, alerts)
+    validations:
+      required: true
+
+  - type: textarea
+    id: agent_capabilities
+    attributes:
+      label: Agent Capabilities
+      description: Describe what this agent can do
+      placeholder: |
+        List the cognitive capabilities and functions of this agent:
+        - Capability 1: Description
+        - Capability 2: Description
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: agent_dependencies
+    attributes:
+      label: Agent Dependencies
+      description: What packages or other agents does this agent depend on?
+      placeholder: |
+        - Package dependencies
+        - Agent dependencies
+        - External services
+
+  - type: textarea
+    id: agent_schema
+    attributes:
+      label: Agent Hypergraph Schema
+      description: Define the agent in the cognitive hypergraph
+      placeholder: |
+        ```scheme
+        (agent-node "agent-name"
+          (list 'TYPE "agent-type")
+          (list 'CAPABILITIES '("cap1" "cap2" "cap3"))
+          (list 'DEPENDENCIES '("dep1" "dep2"))
+          (list 'COGNITIVE-LOAD low-medium-high)
+          (list 'AUTONOMY-LEVEL 1-5))
+        ```
+
+  - type: checkboxes
+    id: agent_features
+    attributes:
+      label: Agent Features
+      description: Select the features this agent implements
+      options:
+        - label: Self-monitoring and health reporting
+        - label: Dynamic capability expansion
+        - label: Inter-agent communication
+        - label: Meta-cognitive feedback loops
+        - label: Guix environment integration
+        - label: Issue generation capabilities
+
+  - type: textarea
+    id: deployment_info
+    attributes:
+      label: Deployment Information
+      description: How should this agent be deployed and managed?
+      placeholder: |
+        - Deployment method (container, systemd service, cron job)
+        - Resource requirements
+        - Scaling considerations
+        - Monitoring requirements
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about this agent
