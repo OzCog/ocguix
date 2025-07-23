@@ -54,7 +54,7 @@ if [ -f "registry-sources.scm" ]; then
 EOF
     
     echo "📋 Registry listing generated: $DEMO_DIR/registry_listing.json"
-    echo "   Registries discovered: $(cat "$DEMO_DIR/registry_listing.json" | grep -o '"total_registries": [0-9]*' | grep -o '[0-9]*')"
+    echo "   Registries discovered: $(grep -o '"total_registries": [0-9]*' "$DEMO_DIR/registry_listing.json" | grep -o '[0-9]*')"
 else
     echo "❌ registry-sources.scm not found"
 fi
@@ -112,7 +112,7 @@ if [ -f "base-devcontainers.scm" ]; then
 EOF
     
     echo "📋 Profile scan generated: $DEMO_DIR/build_profiles_scan.json"
-    echo "   Profiles available: $(cat "$DEMO_DIR/build_profiles_scan.json" | grep -o '"total_profiles": [0-9]*' | grep -o '[0-9]*')"
+    echo "   Profiles available: $(grep -o '"total_profiles": [0-9]*' "$DEMO_DIR/build_profiles_scan.json" | grep -o '[0-9]*')"
 else
     echo "❌ base-devcontainers.scm not found"
 fi
@@ -127,11 +127,11 @@ REGISTRY_COUNT=0
 PROFILE_COUNT=0
 
 if [ -f "$DEMO_DIR/registry_listing.json" ]; then
-    REGISTRY_COUNT=$(cat "$DEMO_DIR/registry_listing.json" | grep -o '"total_registries": [0-9]*' | grep -o '[0-9]*')
+    REGISTRY_COUNT=$(grep -o '"total_registries": [0-9]*' "$DEMO_DIR/registry_listing.json" | grep -o '[0-9]*')
 fi
 
 if [ -f "$DEMO_DIR/build_profiles_scan.json" ]; then
-    PROFILE_COUNT=$(cat "$DEMO_DIR/build_profiles_scan.json" | grep -o '"total_profiles": [0-9]*' | grep -o '[0-9]*')
+    PROFILE_COUNT=$(grep -o '"total_profiles": [0-9]*' "$DEMO_DIR/build_profiles_scan.json" | grep -o '[0-9]*')
 fi
 
 cat > "$DEMO_DIR/cognitive_health_metrics.json" << EOF
@@ -157,7 +157,7 @@ cat > "$DEMO_DIR/cognitive_health_metrics.json" << EOF
 EOF
 
 echo "📊 Cognitive health assessment: $DEMO_DIR/cognitive_health_metrics.json"
-echo "   System readiness: $(cat "$DEMO_DIR/cognitive_health_metrics.json" | grep -o '"system_readiness": "[^"]*"' | cut -d'"' -f4)"
+echo "   System readiness: $(grep -o '"system_readiness": "[^"]*"' "$DEMO_DIR/cognitive_health_metrics.json" | cut -d'"' -f4)"
 
 echo ""
 
@@ -181,11 +181,11 @@ if [ "$1" = "--verbose" ] || [ "$1" = "-v" ]; then
     
     echo ""
     echo "🔍 Registry Listing:"
-    cat "$DEMO_DIR/registry_listing.json" | head -20
+    head -20 "$DEMO_DIR/registry_listing.json"
     echo ""
     
     echo "🔧 Build Profiles:"
-    cat "$DEMO_DIR/build_profiles_scan.json" | head -15
+    head -15 "$DEMO_DIR/build_profiles_scan.json"
     echo ""
     
     echo "🧠 Cognitive Health:"
