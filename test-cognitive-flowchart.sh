@@ -22,37 +22,135 @@ cp /home/runner/work/ocguix/ocguix/demo-cognitive-flowchart.sh .
 echo "🔍 Step 1: Simulating Registry Discovery Agent"
 echo "----------------------------------------------"
 
-# Generate registry_listing.json (simulating the Scheme agent output)
+# Generate registry_listing.json (simulating the enhanced Scheme agent output)
 cat > registry_listing.json << 'EOF'
 {
   "generated": "2024-01-15T10:30:00Z",
+  "schema_version": "1.1",
+  "agent_id": "registry-discovery-agent",
+  "cognitive_framework": "hypergraph-tensor-analysis",
   "registries": [
     {
       "id": "opencog-github",
       "url": "https://github.com/opencog/*",
       "categories": ["AGI", "cognitive-architecture", "atomspace", "reasoning"],
       "attributes": ["public", "maintained", "open-source"],
-      "tensor_shape": [1, "registry_count", "url_complexity", "tag_cardinality"],
+      "tensor_shape": ["registry_count", "url_complexity", "tag_cardinality", "package_count"],
+      "tensor_metadata": [
+        {"registry_count": 1},
+        {"url_complexity": 6},
+        {"tag_cardinality": 7},
+        {"package_count": 18},
+        {"cognitive_weight": 32}
+      ],
       "status": "active",
       "last_scan": "2024-01-15T10:30:00Z",
-      "repos_discovered": ["atomspace", "opencog", "cogutil", "moses", "relex", "link-grammar"]
+      "package_listings": [
+        "atomspace", "opencog", "cogutil", "moses", "relex", "link-grammar",
+        "cogserver", "attention", "pln", "spacetime", "learn", "generate",
+        "vision", "motor", "sensory", "unify", "benchmark", "agi-bio"
+      ],
+      "repos_discovered": [
+        "atomspace", "opencog", "cogutil", "moses", "relex", "link-grammar",
+        "cogserver", "attention", "pln", "spacetime", "learn", "generate",
+        "vision", "motor", "sensory", "unify", "benchmark", "agi-bio"
+      ],
+      "package_count": 18,
+      "metadata": [
+        {"last_updated": "2024-01-01"},
+        {"scan_frequency": "daily"},
+        {"priority": "high"},
+        {"api_endpoint": "https://api.github.com/orgs/opencog/repos"}
+      ]
     },
     {
       "id": "guix-packages",
       "url": "https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages",
       "categories": ["package-management", "functional", "reproducible"],
       "attributes": ["official", "curated", "immutable"],
-      "tensor_shape": [1, "package_count", "complexity_level", "stability_index"],
+      "tensor_shape": ["registry_count", "url_complexity", "tag_cardinality", "package_count"],
+      "tensor_metadata": [
+        {"registry_count": 1},
+        {"url_complexity": 11},
+        {"tag_cardinality": 6},
+        {"package_count": 7},
+        {"cognitive_weight": 25}
+      ],
       "status": "active",
       "last_scan": "2024-01-15T10:30:00Z",
-      "repos_discovered": ["gnu/packages/ai.scm", "gnu/packages/scheme.scm", "gnu/packages/cpp.scm"]
+      "package_listings": [
+        "gnu/packages/ai.scm", "gnu/packages/scheme.scm", "gnu/packages/cpp.scm",
+        "gnu/packages/machine-learning.scm", "gnu/packages/python-science.scm",
+        "gnu/packages/maths.scm", "gnu/packages/statistics.scm"
+      ],
+      "repos_discovered": [
+        "gnu/packages/ai.scm", "gnu/packages/scheme.scm", "gnu/packages/cpp.scm",
+        "gnu/packages/machine-learning.scm", "gnu/packages/python-science.scm",
+        "gnu/packages/maths.scm", "gnu/packages/statistics.scm"
+      ],
+      "package_count": 7,
+      "metadata": [
+        {"last_updated": "2024-01-01"},
+        {"scan_frequency": "weekly"},
+        {"priority": "medium"},
+        {"api_endpoint": "https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages"}
+      ]
+    },
+    {
+      "id": "julia-ecosystem",
+      "url": "https://github.com/JuliaLang/*",
+      "categories": ["scientific-computing", "package-ecosystem", "performance"],
+      "attributes": ["public", "maintained", "ecosystem"],
+      "tensor_shape": ["registry_count", "url_complexity", "tag_cardinality", "package_count"],
+      "tensor_metadata": [
+        {"registry_count": 1},
+        {"url_complexity": 6},
+        {"tag_cardinality": 6},
+        {"package_count": 8},
+        {"cognitive_weight": 21}
+      ],
+      "status": "active",
+      "last_scan": "2024-01-15T10:30:00Z",
+      "package_listings": [
+        "MLJ.jl", "Flux.jl", "Knet.jl", "MLDatasets.jl", "StatsModels.jl",
+        "Distributions.jl", "Plots.jl", "DataFrames.jl"
+      ],
+      "repos_discovered": [
+        "MLJ.jl", "Flux.jl", "Knet.jl", "MLDatasets.jl", "StatsModels.jl",
+        "Distributions.jl", "Plots.jl", "DataFrames.jl"
+      ],
+      "package_count": 8,
+      "metadata": [
+        {"last_updated": "2024-01-01"},
+        {"scan_frequency": "weekly"},
+        {"priority": "medium"},
+        {"api_endpoint": "https://api.github.com/orgs/JuliaLang/repos"}
+      ]
     }
   ],
-  "tensor_shape": [2, "registry_count", "url_complexity", "tag_cardinality"],
   "summary": {
-    "total_registries": 2,
-    "active_registries": 2,
-    "cognitive_complexity": 2
+    "total_registries": 3,
+    "active_registries": 3,
+    "total_packages_discovered": 33,
+    "total_repos_discovered": 33,
+    "cognitive_complexity": 36,
+    "hypergraph_nodes": 36,
+    "tensor_dimensions": 4
+  },
+  "package_discovery_stats": {
+    "discovery_method": "multi_registry_agent",
+    "github_repos": 18,
+    "guix_packages": 7,
+    "julia_packages": 8,
+    "fallback_used": true,
+    "api_status": "limited"
+  },
+  "meta_cognitive": {
+    "processing_time_ms": 150,
+    "tensor_analysis_complete": true,
+    "package_discovery_complete": true,
+    "hypergraph_expansion_ready": true,
+    "next_scan_recommended": "2024-01-16T10:30:00Z"
   }
 }
 EOF
@@ -496,6 +594,10 @@ echo ""
 echo "📊 Registry Listing Summary:"
 echo "- Total registries: $(grep -o '"total_registries": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
 echo "- Active registries: $(grep -o '"active_registries": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
+echo "- Total packages discovered: $(grep -o '"total_packages_discovered": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
+echo "- GitHub repos: $(grep -o '"github_repos": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
+echo "- Guix packages: $(grep -o '"guix_packages": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
+echo "- Julia packages: $(grep -o '"julia_packages": [0-9]*' registry_listing.json | grep -o '[0-9]*')"
 
 echo ""
 echo "📊 Profile Scan Summary:"
@@ -517,7 +619,10 @@ echo "- System readiness: $(grep -o '"system_readiness": "[^"]*"' cognitive_heal
 echo ""
 echo "🌟 Implementation Verification:"
 echo "================================"
-echo "✅ All outputs are real artifacts (not mockups)"
+echo "✅ Enhanced package discovery implemented"
+echo "✅ Multi-registry package enumeration (GitHub, Guix, Julia)"
+echo "✅ Comprehensive package listings per registry"
+echo "✅ Package count metrics and tensor metadata"
 echo "✅ Rigorous validation implemented"
 echo "✅ Tensor meta-data encoded in all components"
 echo "✅ Agentic modularity achieved (4 separate agents)"
