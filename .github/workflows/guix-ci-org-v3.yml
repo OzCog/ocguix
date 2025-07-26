@@ -1,14 +1,36 @@
 # .github/workflows/ci-org-v3.yml
 
-name: CI Org v3
+name: GUIX CI Org v3
+
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - main
+    branches: [ main, master ]
+  schedule:
+    # Run daily at 6 AM UTC to check for package updates
+    - cron: '0 6 * * *'
+#  workflow_dispatch:
+#    inputs:
+#      trigger_type:
+#        description: 'Type of analysis to trigger'
+#        required: true
+#        default: 'full_ecosystem_scan'
+#        type: choice
+#        options:
+#        - full_ecosystem_scan
+#        - dependency_analysis
+#        - package_health_check
+#        - agent_registration
+
+#on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
 
 env:
   CCACHE_DIR: /ws/ccache
@@ -48,6 +70,20 @@ jobs:
       # 2. Configure Git Safe Directory
 #      - name: Configure Git Safe Directory
 #        run: git config --global --add safe.directory /__w/opencog-central/opencog-central
+#      - name: 'Cognitive Bootstrap: Repository Checkout'
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+      
+      # 2. Setup Guix Environment
+      - name: Setup Guix Environment
+        run: |
+          # Install Guix for reproducible builds (non-interactive)
+          wget https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
+          chmod +x guix-install.sh
+          yes "" | sudo ./guix-install.sh
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          guix --version || echo "Guix installation in progress..."
 
       # 3. Install Dependencies
       - name: Install Dependencies
