@@ -1,6 +1,7 @@
 ;; Guix manifest for cognitive ecosystem
 ;; Use with: guix install -m cognitive-manifest.scm
 ;; Updated for madness issue #68 - includes AI model and KoboldCpp dependencies
+;; Updated for issue #109 - includes cogutil vendoring dependencies
 
 (specifications->manifest
   '(;; Core build tools
@@ -21,9 +22,11 @@
     "curl"
     "wget"
     
-    ;; OpenCog dependencies
+    ;; OpenCog and cogutil dependencies
     "boost"
     "cxxtest"
+    "binutils"         ; For cogutil build process
+    "libtool"          ; For cogutil build process
     
     ;; AI/ML model infrastructure (issue #68, #74)
     "python-numpy"
