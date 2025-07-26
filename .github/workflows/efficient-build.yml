@@ -2,9 +2,9 @@ name: CogML Efficient Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 permissions:
   contents: read
@@ -129,9 +129,9 @@ jobs:
     strategy:
       matrix:
         component:
-          - { name: "ure", path: "orc-ai/ure", needs_unify: true }
-          - { name: "moses", path: "orc-ai/moses", needs_unify: false }
-          - { name: "cogserver", path: "orc-sv/cogserver", needs_unify: false }
+          - { name: "ure", path: "ure", needs_unify: true }
+          - { name: "moses", path: "moses", needs_unify: false }
+          - { name: "cogserver", path: "cogserver", needs_unify: false }
     steps:
       - uses: actions/checkout@v4
       
