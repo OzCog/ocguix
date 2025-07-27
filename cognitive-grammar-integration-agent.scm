@@ -131,32 +131,32 @@
   (format #t "(define (bridge-to-koboldcpp query)~%")
   (format #t "  \"Send query to KoboldCpp language model server\"~%")
   (format #t "  (let ((endpoint \"http://localhost:5001/api/v1/generate\")~%")
-  (format #t "        (payload (format #f \"{\\\"prompt\\\": \\\"~a\\\", \\\"max_length\\\": 100}\" query)))~%")
+  (format #t "        (payload (format #f \"{\\\"prompt\\\": \\\"~~a\\\", \\\"max_length\\\": 100}\" query)))~%")
   (format #t "    ;; Implementation would use HTTP client~%")
-  (format #t "    (format #t \"Sending to KoboldCpp: ~a~%\" query)~%")
-  (format #t "    (format #f \"Response from language model for: ~a\" query)))~%~%")
+  (format #t "    (format #t \"Sending to KoboldCpp: ~~a~~%\" query)~%")
+  (format #t "    (format #f \"Response from language model for: ~~a\" query)))~%~%")
   
   ;; Agent-zero bridge
   (format #t "(define (bridge-to-agent-zero task)~%")
   (format #t "  \"Send task to agent-zero framework\"~%")
   (format #t "  (let ((bridge-script \"~/agent-zero-integration/koboldcpp-agent-zero-bridge.py\"))~%")
   (format #t "    ;; Implementation would use system call~%")
-  (format #t "    (format #t \"Delegating to agent-zero: ~a~%\" task)~%")
-  (format #t "    (format #f \"Task execution initiated: ~a\" task)))~%~%")
+  (format #t "    (format #t \"Delegating to agent-zero: ~~a~~%\" task)~%")
+  (format #t "    (format #f \"Task execution initiated: ~~a\" task)))~%~%")
   
   ;; OpenCog bridge
   (format #t "(define (bridge-to-opencog concept)~%")
   (format #t "  \"Store/retrieve concept in OpenCog AtomSpace\"~%")
-  (format #t "  (format #t \"Processing concept: ~a~%\" concept)~%")
+  (format #t "  (format #t \"Processing concept: ~~a~~%\" concept)~%")
   (format #t "  ;; Would integrate with AtomSpace API~%")
-  (format #t "  (format #f \"Concept processed in AtomSpace: ~a\" concept))~%~%")
+  (format #t "  (format #f \"Concept processed in AtomSpace: ~~a\" concept))~%~%")
   
   ;; Guix bridge
   (format #t "(define (bridge-to-guix package-spec)~%")
   (format #t "  \"Resolve package dependencies via Guix\"~%")
-  (format #t "  (format #t \"Resolving package: ~a~%\" package-spec)~%")
+  (format #t "  (format #t \"Resolving package: ~~a~~%\" package-spec)~%")
   (format #t "  ;; Would call guix commands~%")
-  (format #f "  (format #f \"Package resolution: ~a\" package-spec))~%~%"))
+  (format #f "  (format #f \"Package resolution: ~~a\" package-spec))~%~%"))
 
 ;; Function to generate distributed network integration
 (define (generate-network-integration)
@@ -182,14 +182,14 @@
   
   (format #t "(define (send-message-to-network recipient msg-type payload)~%")
   (format #t "  \"Send a message to another agent via the network coordinator\"~%")
-  (format #t "  (format #t \"📧 Sending ~a message to ~a~%\" msg-type recipient)~%")
-  (format #t "  (format #t \"   Payload: ~a~%\" payload)~%")
+  (format #t "  (format #t \"📧 Sending ~~a message to ~~a~~%\" msg-type recipient)~%")
+  (format #t "  (format #t \"   Payload: ~~a~~%\" payload)~%")
   (format #t "  ;; Would route through network coordinator~%")
   (format #t "  (list 'message-sent agent-id recipient msg-type payload))~%~%")
   
   (format #t "(define (handle-network-message from msg-type payload)~%")
   (format #t "  \"Handle incoming messages from the distributed network\"~%")
-  (format #t "  (format #t \"📨 Received ~a message from ~a~%\" msg-type from)~%")
+  (format #t "  (format #t \"📨 Received ~~a message from ~~a~~%\" msg-type from)~%")
   (format #t "  (match msg-type~%")
   (format #t "    ('query~%")
   (format #t "     (process-network-query from payload))~%")
@@ -198,7 +198,7 @@
   (format #t "    ('coordination~%")
   (format #t "     (process-coordination-request from payload))~%")
   (format #t "    (_~%")
-  (format #t "     (format #t \"⚠️ Unknown message type: ~a~%\" msg-type))))~%~%")
+  (format #t "     (format #t \"⚠️ Unknown message type: ~~a~~%\" msg-type))))~%~%")
   
   (format #t "(define (process-network-query from payload)~%")
   (format #t "  \"Process a query from another network agent\"~%")
@@ -207,13 +207,13 @@
   
   (format #t "(define (process-network-task from payload)~%")
   (format #t "  \"Process a task request from another network agent\"~%")
-  (format #t "  (format #t \"🎯 Processing network task: ~a~%\" payload)~%")
+  (format #t "  (format #t \"🎯 Processing network task: ~~a~~%\" payload)~%")
   (format #t "  (let ((result (execute-distributed-task payload)))~%")
   (format #t "    (send-message-to-network from 'task-result result)))~%~%")
   
   (format #t "(define (process-coordination-request from payload)~%")
   (format #t "  \"Process coordination requests from the network coordinator\"~%")
-  (format #t "  (format #t \"🤝 Processing coordination request: ~a~%\" payload)~%")
+  (format #t "  (format #t \"🤝 Processing coordination request: ~~a~~%\" payload)~%")
   (format #t "  (match payload~%")
   (format #t "    (('pipeline-step step-info)~%")
   (format #t "     (execute-pipeline-step step-info))~%")
@@ -222,11 +222,11 @@
   (format #t "    (('health-check)~%")
   (format #t "     (report-agent-health))~%")
   (format #t "    (_~%")
-  (format #t "     (format #t \"⚠️ Unknown coordination request: ~a~%\" payload))))~%~%")
+  (format #t "     (format #t \"⚠️ Unknown coordination request: ~~a~~%\" payload))))~%~%")
   
   (format #t "(define (execute-distributed-task task)~%")
   (format #t "  \"Execute a task in the distributed network context\"~%")
-  (format #t "  (format #t \"⚙️ Executing distributed task: ~a~%\" task)~%")
+  (format #t "  (format #t \"⚙️ Executing distributed task: ~~a~~%\" task)~%")
   (format #t "  ;; Integrate with other network agents as needed~%")
   (format #t "  (list 'task-completed task (current-time)))~%~%"))
 
@@ -238,9 +238,9 @@
   
   (format #t "(define (process-cognitive-grammar input)~%")
   (format #t "  \"Main entry point for processing cognitive grammar inputs\"~%")
-  (format #t "  (format #t \"🧠 Processing cognitive grammar: ~a~%\" input)~%")
+  (format #t "  (format #t \"🧠 Processing cognitive grammar: ~~a~~%\" input)~%")
   (format #t "  (let ((pattern-type (detect-pattern-type input)))~%")
-  (format #t "    (format #t \"🎯 Detected pattern type: ~a~%\" pattern-type)~%")
+  (format #t "    (format #t \"🎯 Detected pattern type: ~~a~~%\" pattern-type)~%")
   (format #t "    (match pattern-type~%")
   (format #t "      ('query-pattern~%")
   (format #t "       (process-with-coordination 'language-model input))~%")
@@ -255,7 +255,7 @@
   (format #t "      ('network-pattern~%")
   (format #t "       (process-network-operation input))~%")
   (format #t "      (_~%")
-  (format #t "       (format #f \"Unknown pattern type for: ~a\" input)))))~%~%")
+  (format #t "       (format #f \"Unknown pattern type for: ~~a\" input)))))~%~%")
   
   (format #t "(define (detect-pattern-type input)~%")
   (format #t "  \"Analyze input to determine cognitive grammar pattern type\"~%")
@@ -272,7 +272,7 @@
   
   (format #t "(define (process-with-coordination target-system input)~%")
   (format #t "  \"Process input with coordination through the distributed network\"~%")
-  (format #t "  (format #t \"🔗 Coordinating with ~a for: ~a~%\" target-system input)~%")
+  (format #t "  (format #t \"🔗 Coordinating with ~~a for: ~~a~~%\" target-system input)~%")
   (format #t "  (match target-system~%")
   (format #t "    ('language-model~%")
   (format #t "     (coordinate-with-language-model input))~%")
@@ -285,7 +285,7 @@
   (format #t "    ('registry-discovery~%")
   (format #t "     (coordinate-with-registry-discovery input))~%")
   (format #t "    (_~%")
-  (format #t "     (format #f \"Unknown target system: ~a\" target-system))))~%~%")
+  (format #t "     (format #f \"Unknown target system: ~~a\" target-system))))~%~%")
   
   (format #t "(define (coordinate-with-language-model input)~%")
   (format #t "  \"Coordinate with language model through network\"~%")
@@ -317,7 +317,7 @@
   (format #t "    ((string-contains input \"network\")~%")
   (format #t "     (manage-network-topology input))~%")
   (format #t "    (else~%")
-  (format #t "     (format #f \"Unknown network operation: ~a\" input))))~%~%"))
+  (format #t "     (format #f \"Unknown network operation: ~~a\" input))))~%~%"))
 
 ;; Function to run registry discovery for discovery patterns
 (define (run-registry-discovery input)
@@ -370,8 +370,8 @@
         (format #t "           \"registry: scan github opencog repositories\")))~%")
         (format #t "    (for-each~%")
         (format #t "      (lambda (input)~%")
-        (format #t "        (format #t \"~%Input: ~a~%\" input)~%")
-        (format #t "        (format #t \"Output: ~a~%\" (process-cognitive-grammar input)))~%")
+        (format #t "        (format #t \"~~%Input: ~~a~~%\" input)~%")
+        (format #t "        (format #t \"Output: ~~a~~%\" (process-cognitive-grammar input)))~%")
         (format #t "      test-inputs)))~%~%")
         
         (format #t ";; Main entry point~%")
@@ -380,15 +380,15 @@
         (format #t "  (cond~%")
         (format #t "    ((null? (cdr args))~%")
         (format #t "     (format #t \"Distributed Cognitive Grammar Agent~%\")~%")
-        (format #t "     (format #t \"Usage: ~a <input>~%\" (car args))~%")
-        (format #t "     (format #t \"       ~a --test~%\" (car args))~%")
-        (format #t "     (format #t \"~%Networks: ~a nodes~%\" (length cognitive-network-nodes))~%")
-        (format #t "     (format #t \"Patterns: ~a types~%\" (length cognitive-routing-rules)))~%")
+        (format #t "     (format #t \"Usage: ~~a <input>~~%\" (car args))~%")
+        (format #t "     (format #t \"       ~~a --test~~%\" (car args))~%")
+        (format #t "     (format #t \"~~%Networks: ~~a nodes~~%\" (length cognitive-network-nodes))~%")
+        (format #t "     (format #t \"Patterns: ~~a types~~%\" (length cognitive-routing-rules)))~%")
         (format #t "    ((string=? (cadr args) \"--test\")~%")
         (format #t "     (test-cognitive-grammar))~%")
         (format #t "    (else~%")
         (format #t "     (let ((input (string-join (cdr args) \" \")))~%")
-        (format #t "       (format #t \"Result: ~a~%\" (process-cognitive-grammar input))))))~%~%")
+        (format #t "       (format #t \"Result: ~~a~~%\" (process-cognitive-grammar input))))))~%~%")
         
         (format #t ";; If running as script~%")
         (format #t "(when (batch-mode?)~%")

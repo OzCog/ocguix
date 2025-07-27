@@ -75,7 +75,7 @@ setup_guix_with_fallback() {
     # Try to use the bootstrap script
     if [ -f "$WORKSPACE_ROOT/guix-cognitive-bootstrap.sh" ]; then
         log_info "Using cognitive bootstrap script..."
-        if timeout 300 "$WORKSPACE_ROOT/guix-cognitive-bootstrap.sh" --quick-setup; then
+        if timeout 300 "$WORKSPACE_ROOT/guix-cognitive-bootstrap.sh" setup; then
             log_success "Guix installed via cognitive bootstrap"
             return 0
         else
