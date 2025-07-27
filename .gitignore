@@ -3,12 +3,11 @@
 node_modules/
 cognitive-packages/
 *.tmp
-# KoboldCpp generated files
+# KoboldCpp generated files - only the local ones, not the repo
 models/
-koboldcpp/
 nohup.out
 *.log
 # Generated cognitive agents
 distributed-cognitive-grammar-agent.scm
-# Vendored dependencies (cogutil is vendored by CI, not tracked)
-cogutil/
+# Local temporary cogutil builds (CI vendoring)
+/cogutil/

@@ -179,9 +179,20 @@ then
         read -p "Download Opencog source to current path? (y/n) " gitclone
         if [ "$gitclone" == "y" ] || [ "$gitclone" == "Y" ]
         then
-          git clone https://github.com/opencog/opencog.git
-          git clone https://github.com/opencog/atomspace.git
-          git clone https://github.com/opencog/cogutil.git
+          # Check if local monorepo sources are available
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          if [ -d "$SCRIPT_DIR/repos/opencog" ] && [ -d "$SCRIPT_DIR/repos/atomspace" ] && [ -d "$SCRIPT_DIR/repos/cogutil" ]; then
+            echo "Using local repositories from monorepo..."
+            cp -r "$SCRIPT_DIR/repos/opencog" .
+            cp -r "$SCRIPT_DIR/repos/atomspace" .
+            cp -r "$SCRIPT_DIR/repos/cogutil" .
+            echo "✅ OpenCog source copied from local monorepo!"
+          else
+            echo "Local monorepo not found, cloning from GitHub..."
+            git clone https://github.com/opencog/opencog.git
+            git clone https://github.com/opencog/atomspace.git
+            git clone https://github.com/opencog/cogutil.git
+          fi
           echo "You should now be able to build according to the OpenCog for noobs instructions. Good luck!"
         else
             echo "Download of OpenCog aborted."

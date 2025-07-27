@@ -126,16 +126,29 @@ EOF
 
 # Function to clone KoboldCpp repository (#71)
 clone_koboldcpp() {
-    echo "📥 Cloning KoboldCpp repository (issue #71)"
+    echo "📥 Setting up KoboldCpp repository (issue #71)"
     echo "------------------------------------------"
     
     if [ -d "$KOBOLDCPP_DIR" ]; then
         echo "⚠️  KoboldCpp directory already exists, updating..."
         cd "$KOBOLDCPP_DIR"
-        git pull
+        # Only try to pull if it's a git repository
+        if [ -d ".git" ]; then
+            git pull
+        else
+            echo "ℹ️  Directory exists but is not a git repository (likely from monorepo)"
+        fi
     else
-        echo "📥 Cloning https://github.com/LostRuins/koboldcpp.git"
-        git clone https://github.com/LostRuins/koboldcpp.git "$KOBOLDCPP_DIR"
+        # First try to use local koboldcpp from monorepo
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -d "$SCRIPT_DIR/repos/koboldcpp" ]; then
+            echo "📥 Using local KoboldCpp from monorepo"
+            cp -r "$SCRIPT_DIR/repos/koboldcpp" "$KOBOLDCPP_DIR"
+        else
+            # Fallback to cloning from upstream
+            echo "📥 Cloning https://github.com/LostRuins/koboldcpp.git"
+            git clone https://github.com/LostRuins/koboldcpp.git "$KOBOLDCPP_DIR"
+        fi
     fi
     
     echo "✅ KoboldCpp repository ready at $KOBOLDCPP_DIR"
