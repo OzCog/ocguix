@@ -36,6 +36,32 @@
 ;; Load registry sources module
 (load "./registry-sources.scm")
 
+;; Global offline mode detection
+(define *offline-mode* #f)
+(define *offline-mode-detected* #f)
+
+(define (detect-offline-mode)
+  "Detect if we're running in an offline environment"
+  (if *offline-mode-detected*
+      *offline-mode*
+      (begin
+        (set! *offline-mode-detected* #t)
+        (catch #t
+          (lambda ()
+            ;; Try a simple HTTP request to detect connectivity
+            (http-get (string->uri "https://httpbin.org/status/200"))
+            (set! *offline-mode* #f)
+            #f)
+          (lambda (key . args)
+            (if (or (eq? key 'getaddrinfo-error) (eq? key 'gnutls-not-available))
+                (begin
+                  (set! *offline-mode* #t)
+                  (format #t "🔍 Offline environment detected, using cached data throughout discovery~%")
+                  #t)
+                (begin
+                  (set! *offline-mode* #t)
+                  #t)))))))
+
 ;; Define simplified accessor functions to work around module loading issues
 (define (get-registry-id node)
   (cond 
@@ -176,7 +202,10 @@
                   '())))))
     (lambda (key . args)
       ;; Error handling: return known repos as fallback
-      (format #t "❌ GitHub API error for ~a: ~a, using fallback data~%" org-name key)
+      (if (not *offline-mode-detected*) (detect-offline-mode))
+      (if *offline-mode*
+          (format #t "ℹ️  Using cached OpenCog repository data (offline mode)~%")
+          (format #t "⚠️  GitHub API error for ~a: ~a, using fallback data~%" org-name key))
       (if (string=? org-name "opencog")
           '("atomspace" "opencog" "cogutil" "moses" "relex" "link-grammar")
           '()))))
@@ -204,11 +233,16 @@
                                      file (response-code response))
                              #f))))
                    (lambda (key . args)
-                     (format #t "❌ Error accessing Guix package file ~a: ~a~%" file key)
+                     (if (not *offline-mode-detected*) (detect-offline-mode))
+                     (when (not *offline-mode*)
+                       (format #t "⚠️  Error accessing Guix package file ~a: ~a~%" file key))
                      #f)))
                package-files)))
     (lambda (key . args)
-      (format #t "❌ Guix package scanning failed: ~a~%" key)
+      (if (not *offline-mode-detected*) (detect-offline-mode))
+      (if *offline-mode*
+          (format #t "ℹ️  Using cached Guix package data (offline mode)~%")
+          (format #t "⚠️  Guix package scanning failed: ~a~%" key))
       '())))
 
 (define (discover-guix-packages)
@@ -222,12 +256,18 @@
               (map (lambda (file) (string-append "gnu/packages/" file)) scanned-packages))
             ;; Fallback to known relevant packages
             (begin
-              (format #t "⚠️  Guix scanning failed, using fallback data~%")
+              (if (not *offline-mode-detected*) (detect-offline-mode))
+              (if *offline-mode*
+                  (format #t "ℹ️  Using cached Guix package data (offline mode)~%")
+                  (format #t "⚠️  Guix scanning failed, using fallback data~%"))
               '("gnu/packages/ai.scm" "gnu/packages/scheme.scm" "gnu/packages/cpp.scm"
                 "gnu/packages/machine-learning.scm" "gnu/packages/python-science.scm"
                 "gnu/packages/maths.scm" "gnu/packages/statistics.scm")))))
     (lambda (key . args)
-      (format #t "❌ Guix package discovery failed: ~a, using fallback data~%" key)
+      (if (not *offline-mode-detected*) (detect-offline-mode))
+      (if *offline-mode*
+          (format #t "ℹ️  Using cached Guix package data (offline mode)~%")
+          (format #t "⚠️  Guix package discovery failed: ~a, using fallback data~%" key))
       '("gnu/packages/ai.scm" "gnu/packages/scheme.scm" "gnu/packages/cpp.scm"))))
 
 (define (parse-julia-registry-toml response-body)
@@ -297,7 +337,10 @@
               '("MLJ.jl" "Flux.jl" "Knet.jl" "MLDatasets.jl" "StatsModels.jl"
                 "Distributions.jl" "Plots.jl" "DataFrames.jl")))))
     (lambda (key . args)
-      (format #t "❌ Julia package discovery failed: ~a, using fallback data~%" key)
+      (if (not *offline-mode-detected*) (detect-offline-mode))
+      (if *offline-mode*
+          (format #t "ℹ️  Using cached Julia package data (offline mode)~%")
+          (format #t "⚠️  Julia package discovery failed: ~a, using fallback data~%" key))
       '("MLJ.jl" "Flux.jl" "DataFrames.jl"))))
 
 (define (discover-packages-for-registry node)
