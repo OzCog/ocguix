@@ -7,6 +7,7 @@ FROM gitpod/workspace-python-3.10:2025-07-23-06-50-33
 USER root
 
 # Install system dependencies for OpenCog cognitive ecosystem
+# This installs all heavy dependencies at build time to avoid runtime delays
 RUN apt-get update && apt-get install -y \
     # Core build tools
     build-essential \
@@ -25,8 +26,16 @@ RUN apt-get update && apt-get install -y \
     # Guile and Scheme support
     guile-3.0 \
     guile-3.0-dev \
-    # OpenCog dependencies
+    # OpenCog dependencies - installing all boost libraries at build time
     libboost-all-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libboost-thread-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-serialization-dev \
+    libboost-date-time-dev \
+    libboost-iostreams-dev \
     cxxtest \
     # KoboldCpp and AI model dependencies
     python3-dev \
@@ -37,6 +46,11 @@ RUN apt-get update && apt-get install -y \
     pandoc \
     # Network tools for cognitive agents
     netcat-openbsd \
+    # Additional dependencies to avoid runtime installation
+    vim \
+    nano \
+    htop \
+    tree \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
