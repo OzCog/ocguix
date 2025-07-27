@@ -73,9 +73,9 @@ class ApiHandler:
 
             # return exceptions with 500
         except Exception as e:
-            error = format_error(e)
-            PrintStyle.error(f"API error: {error}")
-            return Response(response=error, status=500, mimetype="text/plain")
+            # Log the detailed error for internal debugging
+            PrintStyle.error(f"API error: {str(e)}")
+            return Response(response="An internal server error occurred.", status=500, mimetype="text/plain")
 
     # get context to run agent zero in
     def get_context(self, ctxid: str):
