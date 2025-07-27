@@ -35,15 +35,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      # 1. Ensure tar is installed
-      - name: Ensure tar is installed
-        run: sudo apt-get update && sudo apt-get install -y tar
-
-      # 2. Checkout the Repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # 3. Setup Guix Environment
+      # 1. Setup Guix Environment
       - name: Setup Guix Environment
         run: |
           echo "🔧 Installing Guix for reproducible builds..."
@@ -57,7 +49,7 @@ jobs:
             echo "⚠️ Guix installation may be incomplete, falling back to apt"
           fi
 
-      # 4. Create root role in PostgreSQL
+      # 2. Create root role in PostgreSQL
       - name: Create root role in PostgreSQL
         run: |
           # Install PostgreSQL client tools if not available
@@ -75,6 +67,14 @@ jobs:
           psql -h localhost -p 5432 -U opencog_test -d atomspace_db -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'rootpassword';" || echo "Root role may already exist or creation failed"
         env:
           PGPASSWORD: cheese
+
+      # 3. Ensure tar is installed
+      - name: Ensure tar is installed
+        run: sudo apt-get update && sudo apt-get install -y tar
+
+      # 4. Checkout the Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       # 5. Clone Missing Repositories (Monorepo Format - No Submodules)
       - name: Clone Missing OpenCog Repositories
