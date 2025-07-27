@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 #
 ## @file        octool_rpi
 ## @author      Dagim Sisay <dagiopia@gmail.com>
