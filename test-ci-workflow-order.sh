@@ -107,7 +107,7 @@ else
     echo "  1. Checkout Repository"
     echo "  2. Setup Guix Environment"
     echo "  3. Ensure tar is installed"
-    echo "  4. Create root role in PostgreSQL"
+    echo "  4. Setup Local PostgreSQL with Root Access"
     echo "  5. Clone Missing OpenCog Repositories"
     echo "  6. Install Build Dependencies"
     echo "  7. Validate Guix Integration and Repository Structure"

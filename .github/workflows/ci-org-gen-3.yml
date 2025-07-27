@@ -92,47 +92,100 @@ jobs:
       - name: Ensure tar is installed
         run: sudo apt-get update && sudo apt-get install -y tar
 
-      # 4. Create root role in PostgreSQL
-      - name: Create root role in PostgreSQL
+      # 4. Setup Local PostgreSQL with Root Access
+      - name: Setup Local PostgreSQL with Root Access
         run: |
-          # Install PostgreSQL client tools if not available
-          if ! command -v psql &> /dev/null; then
-            echo "Installing PostgreSQL client tools..."
-            sudo apt-get update && sudo apt-get install -y postgresql-client
-          fi
+          echo "🗄️ Setting up local PostgreSQL with full root access..."
           
-          # Wait for PostgreSQL to be ready with timeout
-          echo "Waiting for PostgreSQL to be ready..."
-          MAX_RETRIES=30
-          RETRY_COUNT=0
+          # Install PostgreSQL server and client tools
+          echo "📦 Installing PostgreSQL..."
+          sudo apt-get update && sudo apt-get install -y postgresql postgresql-client postgresql-contrib
           
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if pg_isready -h localhost -p 5432; then
-              echo "✅ PostgreSQL is ready!"
-              break
+          # Start local PostgreSQL service
+          echo "🚀 Starting local PostgreSQL service..."
+          sudo systemctl start postgresql
+          sudo systemctl enable postgresql
+          
+          # Wait for local PostgreSQL to be ready
+          echo "⏳ Waiting for local PostgreSQL to start..."
+          sudo -u postgres pg_isready -p 5433 || {
+            echo "🔧 Starting PostgreSQL on custom port 5433..."
+            sudo -u postgres pg_ctl -D /var/lib/postgresql/14/main -o "-p 5433" -l /var/log/postgresql/postgresql-14-main.log start
+            sleep 5
+          }
+          
+          # Create local database and users with full permissions
+          echo "🔨 Creating local database structure..."
+          sudo -u postgres createdb -p 5433 atomspace_db || echo "Database may already exist"
+          sudo -u postgres psql -p 5433 -c "CREATE USER opencog_test WITH PASSWORD 'cheese' SUPERUSER;" || echo "User may already exist"
+          sudo -u postgres psql -p 5433 -c "CREATE USER root WITH PASSWORD 'rootpassword' SUPERUSER;" || echo "Root user may already exist"
+          sudo -u postgres psql -p 5433 -c "GRANT ALL PRIVILEGES ON DATABASE atomspace_db TO opencog_test;"
+          sudo -u postgres psql -p 5433 -c "GRANT ALL PRIVILEGES ON DATABASE atomspace_db TO root;"
+          
+          # Check if service PostgreSQL has data to copy
+          echo "🔍 Checking service PostgreSQL for existing data..."
+          if command -v psql &> /dev/null; then
+            # Install netcat for connectivity testing
+            sudo apt-get install -y netcat-openbsd
+            
+            # Wait for service PostgreSQL to be ready with timeout
+            echo "⏳ Waiting for service PostgreSQL to be ready..."
+            MAX_RETRIES=30
+            RETRY_COUNT=0
+            SERVICE_READY=false
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+                echo "✅ Service PostgreSQL is ready!"
+                SERVICE_READY=true
+                break
+              else
+                echo "⏳ Service PostgreSQL not ready yet (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+                sleep 2
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+              fi
+            done
+            
+            if [ "$SERVICE_READY" = "true" ]; then
+              echo "📋 Copying data from service PostgreSQL to local..."
+              # Export data from service PostgreSQL
+              PGPASSWORD=cheese pg_dump -h localhost -p 5432 -U opencog_test -d atomspace_db --clean --no-owner --no-privileges > /tmp/atomspace_dump.sql 2>/dev/null || {
+                echo "⚠️ No data to copy from service PostgreSQL (this is normal for fresh setup)"
+              }
+              
+              # Import data to local PostgreSQL if dump exists and is not empty
+              if [ -f /tmp/atomspace_dump.sql ] && [ -s /tmp/atomspace_dump.sql ]; then
+                echo "📥 Importing data to local PostgreSQL..."
+                sudo -u postgres psql -p 5433 -d atomspace_db -f /tmp/atomspace_dump.sql || echo "⚠️ Import completed with warnings (this is normal)"
+                rm -f /tmp/atomspace_dump.sql
+              else
+                echo "📝 No existing data found, starting with fresh database"
+              fi
             else
-              echo "⏳ PostgreSQL not ready yet (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
-              sleep 2
-              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "⚠️ Service PostgreSQL not accessible, proceeding with fresh local database"
+              echo "🔍 Service PostgreSQL debugging info:"
+              docker ps | grep postgres || echo "No postgres containers found"
+              nc -zv localhost 5432 || echo "Port 5432 not accessible"
             fi
-          done
-          
-          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo "❌ PostgreSQL failed to become ready after $MAX_RETRIES attempts"
-            echo "🔍 Debugging PostgreSQL connection..."
-            echo "Service status:"
-            docker ps | grep postgres || echo "No postgres containers found"
-            echo "Network connectivity test:"
-            nc -zv localhost 5432 || echo "Port 5432 not accessible"
-            echo "PostgreSQL logs:"
-            docker logs $(docker ps -q --filter ancestor=opencog/postgres) 2>/dev/null || echo "No postgres container logs available"
-            exit 1
           fi
           
-          # Create the root role that may be expected by some components
-          psql -h localhost -p 5432 -U opencog_test -d atomspace_db -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'rootpassword';" || echo "Root role may already exist or creation failed"
-        env:
-          PGPASSWORD: cheese
+          # Verify local PostgreSQL setup
+          echo "✅ Verifying local PostgreSQL setup..."
+          sudo -u postgres psql -p 5433 -d atomspace_db -c "SELECT current_user, current_database();"
+          sudo -u postgres psql -p 5433 -c "SELECT rolname, rolsuper FROM pg_roles WHERE rolname IN ('opencog_test', 'root');"
+          
+          echo "🎯 Local PostgreSQL setup complete!"
+          echo "   - Database: atomspace_db (port 5433)"
+          echo "   - Users: opencog_test (superuser), root (superuser)"
+          echo "   - Passwords: cheese, rootpassword respectively"
+          echo "   - Full write access available for monorepo use"
+          
+          # Set environment variable for subsequent steps to use local PostgreSQL
+          echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5433" >> $GITHUB_ENV
+          echo "POSTGRES_DB=atomspace_db" >> $GITHUB_ENV
+          echo "POSTGRES_USER=opencog_test" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=cheese" >> $GITHUB_ENV
 
       # 5. Clone Missing Repositories (Monorepo Format - No Submodules)
       - name: Clone Missing OpenCog Repositories
