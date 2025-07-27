@@ -6,10 +6,10 @@ name: OC
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 env:
   CCACHE_DIR: /ws/ccache
@@ -242,7 +242,7 @@ jobs:
 
       # (Optional) Package Components
       - name: Package Components
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           # cogutil Packaging
           cd cogutil/build
