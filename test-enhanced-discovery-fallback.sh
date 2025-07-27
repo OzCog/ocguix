@@ -8,6 +8,7 @@ echo ""
 
 # Create test directory
 TEST_DIR="/tmp/enhanced-discovery-test"
+rm -rf "$TEST_DIR"  # Clean up any previous runs
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
@@ -15,8 +16,10 @@ echo "📁 Test directory: $TEST_DIR"
 echo ""
 
 # Copy the enhanced registry discovery agent
-cp /home/runner/work/ocguix/ocguix/registry-discovery-agent.scm .
-cp /home/runner/work/ocguix/ocguix/registry-sources.scm .
+# Use the directory where this script is located, not hardcoded paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR"/registry-discovery-agent.scm . 2>/dev/null || true
+cp "$SCRIPT_DIR"/registry-sources.scm . 2>/dev/null || true
 
 echo "🔍 Testing Enhanced Package Discovery Capabilities"
 echo "--------------------------------------------------"

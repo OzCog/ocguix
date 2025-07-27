@@ -13,6 +13,7 @@ echo ""
 
 # Create temp directory for demo
 DEMO_DIR="/tmp/cognitive-flowchart-demo"
+rm -rf "$DEMO_DIR"  # Clean up any previous runs
 mkdir -p "$DEMO_DIR"
 cd "$DEMO_DIR"
 
@@ -20,7 +21,9 @@ echo "📁 Demo directory: $DEMO_DIR"
 echo ""
 
 # Copy cognitive agents to demo directory
-cp /home/runner/work/ocguix/ocguix/*.scm .
+# Use the directory where this script is located, not hardcoded paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR"/*.scm . 2>/dev/null || true
 
 echo "🧠 Node 1: Registry Source Discovery Agent"
 echo "===========================================" 
@@ -33,7 +36,7 @@ if [ -f "registry-sources.scm" ]; then
     echo "📡 Executing registry discovery agent..."
     
     # Run the test version to generate real artifacts
-    /home/runner/work/ocguix/ocguix/test-cognitive-flowchart.sh >/dev/null 2>&1 
+    "$SCRIPT_DIR"/test-cognitive-flowchart.sh >/dev/null 2>&1 
     
     # Copy the generated registry listing
     if [ -f "/tmp/cognitive-flowchart-test/registry_listing.json" ]; then
