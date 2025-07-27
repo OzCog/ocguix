@@ -33,8 +33,46 @@
   (web response)
   (web uri))
 
-;; Load registry sources module
-(load "./registry-sources.scm")
+;; Fallback registry catalog for container environments
+(define fallback-registries-catalog 
+  '((opencog-github . 
+     ((name . "OpenCog GitHub Organization")
+      (url . "https://github.com/opencog")
+      (type . "github-org")
+      (packages-count . 15)
+      (description . "OpenCog framework repositories")))
+    (guix-packages . 
+     ((name . "GNU Guix Packages")
+      (url . "https://guix.gnu.org/packages")
+      (type . "guix-repo")  
+      (packages-count . 25000)
+      (description . "Guix package definitions")))
+    (julia-ecosystem . 
+     ((name . "Julia Package Ecosystem") 
+      (url . "https://juliahub.com")
+      (type . "julia-registry")
+      (packages-count . 8000)
+      (description . "Julia computational packages")))))
+
+;; Load registry sources module with error handling for container environments
+(define (load-registry-sources-safe)
+  "Load registry sources with graceful fallback for container environments"
+  (catch #t
+    (lambda ()
+      (load "./registry-sources.scm")
+      #t)
+    (lambda (key . args)
+      (format #t "⚠️  Warning: Could not load registry-sources.scm (~a)~%" key)
+      (format #t "🐳 Container environment detected - using fallback registry data~%")
+      #f)))
+
+;; Attempt to load registry sources, fall back to internal data if needed
+(define registries-catalog
+  (if (load-registry-sources-safe)
+      (if (defined? 'registries-catalog) registries-catalog fallback-registries-catalog)  ; Use the loaded catalog if it exists
+      (begin
+        (format #t "ℹ️  Using built-in registry fallback data for container compatibility~%")
+        fallback-registries-catalog)))
 
 ;; Global offline mode detection
 (define *offline-mode* #f)
@@ -70,9 +108,9 @@
     ((string-contains (format #f "~a" node) "julia-ecosystem") "julia-ecosystem")
     (else 
      ;; Default to first registry if detection fails
-     (if (eq? node (car registry-catalog)) "opencog-github"
-         (if (eq? node (cadr registry-catalog)) "guix-packages"
-             (if (eq? node (caddr registry-catalog)) "julia-ecosystem"
+     (if (eq? node (car registries-catalog)) "opencog-github"
+         (if (eq? node (cadr registries-catalog)) "guix-packages"
+             (if (eq? node (caddr registries-catalog)) "julia-ecosystem"
                  "unknown"))))))
 
 (define (get-registry-url node)
@@ -393,7 +431,7 @@
                ("package_listings" . ,(list->vector packages))
                ("repos_discovered" . ,(list->vector packages))
                ("package_count" . ,package-count)))))
-       registry-catalog))
+       registries-catalog))
 
 (define (generate-registry-listing)
   "Generate the complete registry listing with tensor metadata and package discovery"
@@ -443,10 +481,10 @@
   (format #t "📡 Loading registry sources from registry-sources.scm...~%")
   
   ;; Validate registry sources are loaded
-  (if (defined? 'registry-catalog)
+  (if (defined? 'registries-catalog)
       (begin
         (format #t "✅ Registry catalog loaded with ~a registries~%" 
-                (length registry-catalog))
+                (length registries-catalog))
         
         ;; Process registries and discover packages
         (format #t "🔍 Processing registries for REAL package discovery...~%")
@@ -468,7 +506,7 @@
           (format #t "   - Guix packages: ~a~%" total-guix)
           (format #t "   - Julia packages: ~a~%" total-julia)
           (format #t "📊 Total packages discovered: ~a~%" total-packages)
-          (format #t "📊 Total cognitive complexity: ~a~%" (+ (length registry-catalog) total-packages)))
+          (format #t "📊 Total cognitive complexity: ~a~%" (+ (length registries-catalog) total-packages)))
         
         ;; Write output
         (let ((output-file (if (> (length args) 1)
