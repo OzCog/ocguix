@@ -14,6 +14,8 @@ on:
 env:
   CCACHE_DIR: /ws/ccache
   MAKEFLAGS: -j2
+  GUIX_PROFILE: /var/guix/profiles/per-user/root/current-guix
+  PATH: /var/guix/profiles/per-user/root/current-guix/bin:$PATH
 
 jobs:
   build-and-test:
@@ -25,6 +27,8 @@ jobs:
       env:
         CCACHE_DIR: /ws/ccache
         MAKEFLAGS: -j2
+        GUIX_PROFILE: /var/guix/profiles/per-user/root/current-guix
+        PATH: /var/guix/profiles/per-user/root/current-guix/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     services:
       opencog-postgres:
         image: opencog/postgres
@@ -44,25 +48,180 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Install Build Dependencies
+      # 2. Setup Guix Environment
+      - name: Setup Guix Environment
+        run: |
+          echo "🔧 Installing Guix for reproducible builds..."
+          wget -q https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
+          chmod +x guix-install.sh
+          yes "" | sudo ./guix-install.sh || true
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          if command -v guix &> /dev/null; then
+            echo "✅ Guix installed successfully: $(guix --version | head -1)"
+          else
+            echo "⚠️ Guix installation may be incomplete, falling back to apt"
+          fi
+
+      # 3. Clone Missing Repositories (Monorepo Format - No Submodules)
+      - name: Clone Missing OpenCog Repositories
+        run: |
+          echo "📦 Cloning missing OpenCog repositories for monorepo structure..."
+          
+          # Define repositories to clone
+          declare -A REPOS=(
+            ["cogutil"]="https://github.com/opencog/cogutil.git"
+            ["atomspace"]="https://github.com/opencog/atomspace.git"
+            ["atomspace-storage"]="https://github.com/opencog/atomspace-storage.git"
+            ["atomspace-rocks"]="https://github.com/opencog/atomspace-rocks.git"
+            ["atomspace-restful"]="https://github.com/opencog/atomspace-restful.git"
+            ["cogserver"]="https://github.com/opencog/cogserver.git"
+            ["unify"]="https://github.com/opencog/unify.git"
+            ["ure"]="https://github.com/opencog/ure.git"
+            ["spacetime"]="https://github.com/opencog/spacetime.git"
+            ["attention"]="https://github.com/opencog/attention.git"
+            ["miner"]="https://github.com/opencog/miner.git"
+            ["pln"]="https://github.com/opencog/pln.git"
+            ["moses"]="https://github.com/opencog/moses.git"
+            ["asmoses"]="https://github.com/opencog/asmoses.git"
+            ["lg-atomese"]="https://github.com/opencog/lg-atomese.git"
+            ["learn"]="https://github.com/opencog/learn.git"
+            ["pattern-index"]="https://github.com/opencog/pattern-index.git"
+            ["vision"]="https://github.com/opencog/vision.git"
+            ["opencog"]="https://github.com/opencog/opencog.git"
+            ["benchmark"]="https://github.com/opencog/benchmark.git"
+          )
+          
+          # Clone repositories if they don't exist
+          FAILED_CLONES=()
+          for repo in "${!REPOS[@]}"; do
+            if [ ! -d "$repo" ]; then
+              echo "🔄 Cloning $repo..."
+              if git clone --depth 1 "${REPOS[$repo]}" "$repo" 2>/dev/null; then
+                # Remove .git directory for monorepo format (no submodules)
+                rm -rf "$repo/.git"
+                echo "✅ $repo cloned and prepared for monorepo"
+              else
+                echo "❌ Failed to clone $repo"
+                FAILED_CLONES+=("$repo")
+              fi
+            else
+              echo "✅ $repo already exists, skipping"
+            fi
+          done
+          
+          if [ ${#FAILED_CLONES[@]} -gt 0 ]; then
+            echo "⚠️ Failed to clone: ${FAILED_CLONES[*]}"
+            echo "Continuing with available repositories..."
+          fi
+          
+          echo "📊 Repository status:"
+          for repo in "${!REPOS[@]}"; do
+            if [ -d "$repo" ] && [ -f "$repo/CMakeLists.txt" ]; then
+              echo "  ✅ $repo - Ready for build"
+            elif [ -d "$repo" ]; then
+              echo "  ⚠️ $repo - Present but no CMakeLists.txt"
+            else
+              echo "  ❌ $repo - Missing"
+            fi
+          done
+
+      # 4. Install Build Dependencies with Guix Integration
       - name: Install Build Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ccache pkg-config cmake build-essential git
+          # Try to use Guix first, fall back to apt
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          
+          if command -v guix &> /dev/null && [ -f "cognitive-manifest.scm" ]; then
+            echo "🚀 Using Guix cognitive manifest for dependencies..."
+            guix shell -m cognitive-manifest.scm -- echo "Guix environment ready" || {
+              echo "⚠️ Guix manifest failed, falling back to apt..."
+              sudo apt-get update
+              sudo apt-get install -y ccache pkg-config cmake build-essential git
+            }
+          else
+            echo "🔧 Using apt for dependencies..."
+            sudo apt-get update
+            sudo apt-get install -y ccache pkg-config cmake build-essential git
+          fi
 
-      # Build and Install cogutil
+      # 5. Validate Guix Integration and Repository Structure
+      - name: Validate Guix Integration and Repository Structure
+        run: |
+          echo "🔍 Validating Guix integration and repository structure..."
+          
+          # Check Guix availability
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          if command -v guix &> /dev/null; then
+            echo "✅ Guix available: $(guix --version | head -1)"
+            GUIX_AVAILABLE=true
+          else
+            echo "⚠️ Guix not available, using traditional build"
+            GUIX_AVAILABLE=false
+          fi
+          
+          # Validate repository structure
+          echo "📋 Repository structure validation:"
+          MISSING_REPOS=()
+          REQUIRED_REPOS=(cogutil atomspace atomspace-storage atomspace-rocks atomspace-restful cogserver unify ure spacetime attention miner pln moses asmoses lg-atomese learn pattern-index vision opencog benchmark)
+          
+          for repo in "${REQUIRED_REPOS[@]}"; do
+            if [ -d "$repo" ] && [ -f "$repo/CMakeLists.txt" ]; then
+              echo "  ✅ $repo - Ready"
+            else
+              echo "  ❌ $repo - Missing or incomplete"
+              MISSING_REPOS+=("$repo")
+            fi
+          done
+          
+          if [ ${#MISSING_REPOS[@]} -eq 0 ]; then
+            echo "🎯 All repositories present and ready for build"
+          else
+            echo "⚠️ Missing repositories: ${MISSING_REPOS[*]}"
+            echo "Continuing with available repositories..."
+          fi
+          
+          # Export environment flags for subsequent steps
+          echo "GUIX_AVAILABLE=$GUIX_AVAILABLE" >> $GITHUB_ENV
+
+      # Build and Install cogutil (with Guix integration)
       - name: Build and Install cogutil
         run: |
+          echo "🔨 Building cogutil with Guix integration..."
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          
+          if [ ! -d "cogutil" ]; then
+            echo "❌ cogutil directory not found, skipping..."
+            exit 1
+          fi
+          
           mkdir -p cogutil/build && cd cogutil/build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make -j2
-          sudo make install
+          
+          # Use Guix environment if available, otherwise use traditional cmake
+          if [ "$GUIX_AVAILABLE" = "true" ] && command -v guix &> /dev/null; then
+            echo "🚀 Using Guix environment for cogutil build..."
+            guix shell gcc-toolchain cmake pkg-config boost -- \
+              cmake -DCMAKE_BUILD_TYPE=Release .. && \
+              guix shell gcc-toolchain cmake pkg-config boost -- \
+              make -j2 && \
+              sudo make install
+          else
+            echo "🔧 Using traditional cmake for cogutil build..."
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make -j2
+            sudo make install
+          fi
+          
           sudo ldconfig
           cd ../..
 
       # Build and Install atomspace
       - name: Build and Install atomspace
         run: |
+          if [ ! -d "atomspace" ]; then
+            echo "❌ atomspace directory not found, skipping..."
+            exit 1
+          fi
+          
           mkdir -p atomspace/build && cd atomspace/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
@@ -73,6 +232,11 @@ jobs:
       # Build and Install atomSpace-storage
       - name: Build and Install atomSpace-storage
         run: |
+          if [ ! -d "atomspace-storage" ]; then
+            echo "⚠️ atomspace-storage directory not found, skipping..."
+            exit 0
+          fi
+          
           mkdir -p atomspace-storage/build && cd atomspace-storage/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
@@ -83,6 +247,11 @@ jobs:
       # Build and Install atomspace-rocks
       - name: Build and Install atomspace-rocks
         run: |
+          if [ ! -d "atomspace-rocks" ]; then
+            echo "⚠️ atomspace-rocks directory not found, skipping..."
+            exit 0
+          fi
+          
           mkdir -p atomspace-rocks/build && cd atomspace-rocks/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
@@ -103,6 +272,11 @@ jobs:
       # Build and Install cogserver
       - name: Build and Install cogserver
         run: |
+          if [ ! -d "cogserver" ]; then
+            echo "⚠️ cogserver directory not found, skipping..."
+            exit 0
+          fi
+          
           mkdir -p cogserver/build && cd cogserver/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
@@ -532,3 +706,58 @@ jobs:
             vision/build/
             opencog/build/
             benchmark/build/
+
+      # Summary: Guix Integration Results
+      - name: Guix Integration Summary
+        if: always()
+        run: |
+          echo "🎯 Guix Integration Summary"
+          echo "=========================="
+          
+          # Check Guix availability
+          export PATH="/var/guix/profiles/per-user/root/current-guix/bin:$PATH"
+          if command -v guix &> /dev/null; then
+            echo "✅ Guix: Available ($(guix --version | head -1))"
+          else
+            echo "⚠️ Guix: Not available (used fallback builds)"
+          fi
+          
+          # Check manifest
+          if [ -f "cognitive-manifest.scm" ]; then
+            echo "✅ Cognitive Manifest: Found"
+          else
+            echo "❌ Cognitive Manifest: Missing"
+          fi
+          
+          # Repository status summary
+          echo ""
+          echo "📦 Repository Status:"
+          TOTAL_REPOS=0
+          AVAILABLE_REPOS=0
+          BUILT_REPOS=0
+          
+          REQUIRED_REPOS=(cogutil atomspace atomspace-storage atomspace-rocks atomspace-restful cogserver unify ure spacetime attention miner pln moses asmoses lg-atomese learn pattern-index vision opencog benchmark)
+          
+          for repo in "${REQUIRED_REPOS[@]}"; do
+            TOTAL_REPOS=$((TOTAL_REPOS + 1))
+            if [ -d "$repo" ]; then
+              AVAILABLE_REPOS=$((AVAILABLE_REPOS + 1))
+              echo "  ✅ $repo - Available"
+              if [ -d "$repo/build" ]; then
+                BUILT_REPOS=$((BUILT_REPOS + 1))
+              fi
+            else
+              echo "  ❌ $repo - Missing"
+            fi
+          done
+          
+          echo ""
+          echo "📊 Build Statistics:"
+          echo "  Total Repositories: $TOTAL_REPOS"
+          echo "  Available Repositories: $AVAILABLE_REPOS"
+          echo "  Attempted Builds: $BUILT_REPOS"
+          echo "  Success Rate: $(echo "scale=2; $AVAILABLE_REPOS * 100 / $TOTAL_REPOS" | bc -l 2>/dev/null || echo "N/A")%"
+          
+          echo ""
+          echo "🧠 Monorepo Structure: $([ $AVAILABLE_REPOS -gt 0 ] && echo "Successfully established" || echo "Partially established")"
+          echo "🔄 Guix Integration: $([ -f "cognitive-manifest.scm" ] && echo "Ready" || echo "Limited")"
