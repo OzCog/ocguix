@@ -63,26 +63,38 @@ setup_test() {
 test_cogutil_vendoring() {
     test_log "Testing cogutil vendoring process..."
     
-    # Test the vendoring logic exactly as in the workflow
+    # Test the vendoring logic using local monorepo
     if [ ! -d "cogutil" ]; then
-        test_log "Cloning cogutil from upstream..."
-        if git clone https://github.com/opencog/cogutil.git cogutil; then
-            test_success "Cogutil cloned successfully"
+        # First try to use local cogutil from monorepo
+        if [ -d "$REPO_ROOT/repos/cogutil" ]; then
+            test_log "Using local cogutil from monorepo..."
+            if cp -r "$REPO_ROOT/repos/cogutil" cogutil; then
+                test_success "Cogutil copied from local monorepo"
+            else
+                test_error "Failed to copy cogutil from local monorepo"
+                ((TEST_FAILED++))
+                return 1
+            fi
         else
-            test_error "Failed to clone cogutil"
-            ((TEST_FAILED++))
-            return 1
-        fi
-        
-        test_log "Removing .git directory for Guix purity..."
-        rm -rf cogutil/.git
-        
-        if [ ! -d "cogutil/.git" ]; then
-            test_success "Git directory removed successfully"
-        else
-            test_error "Failed to remove .git directory"
-            ((TEST_FAILED++))
-            return 1
+            # Fallback to cloning from upstream if local copy not available
+            test_log "Local cogutil not found, cloning from upstream..."
+            if git clone https://github.com/opencog/cogutil.git cogutil; then
+                test_success "Cogutil cloned successfully"
+                test_log "Removing .git directory for Guix purity..."
+                rm -rf cogutil/.git
+                
+                if [ ! -d "cogutil/.git" ]; then
+                    test_success "Git directory removed successfully"
+                else
+                    test_error "Failed to remove .git directory"
+                    ((TEST_FAILED++))
+                    return 1
+                fi
+            else
+                test_error "Failed to clone cogutil"
+                ((TEST_FAILED++))
+                return 1
+            fi
         fi
     else
         test_success "Cogutil already present, skipping vendoring"
