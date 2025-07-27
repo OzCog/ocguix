@@ -1,12 +1,16 @@
+---
 # Gitpod Configuration for OpenCog Cognitive Ecosystem
-# Complete one-click deployment solution with automated Guix build & deploy process
-# Addresses issue #69: docker pull gitpod/workspace-python-3.10:2025-07-23-06-50-33
+# Complete one-click deployment solution with automated Guix build &
+# deploy process
+# Addresses issue #69: docker pull
+# gitpod/workspace-python-3.10:2025-07-23-06-50-33
 # Part of madness meta-issue #68
 
 image:
   file: .gitpod.Dockerfile
 
-# Configure the workspace with automated deployment and comprehensive error handling
+# Configure the workspace with automated deployment and comprehensive
+# error handling
 tasks:
   - name: "Environment Setup"
     init: |
@@ -27,7 +31,8 @@ tasks:
       echo ""
       echo "🌐 Available Services:"
       echo "  • KoboldCpp Web Interface: Port 5001 (auto-forwarded)"
-      echo "  • Cognitive Grammar Agent: ./cognitive-grammar-integration-agent.scm"
+      echo "  • Cognitive Grammar Agent:" \
+           "./cognitive-grammar-integration-agent.scm"
       echo "  • Package Management: ./ocpkg"
       echo ""
       echo "🚀 Quick Start Commands:"
@@ -47,13 +52,15 @@ tasks:
     command: |
       echo "⏳ Waiting for deployment to complete..."
       # Wait for main deployment to finish
-      while [ ! -f /tmp/deployment-status.txt ] || ! grep -q "completed" /tmp/deployment-status.txt; do
+      while [ ! -f /tmp/deployment-status.txt ] || \
+           ! grep -q "completed" /tmp/deployment-status.txt; do
         sleep 5
         echo "Waiting for deployment..."
       done
       echo "🚀 KoboldCpp server starting automatically..."
       # Server started by deploy.sh, this task just monitors
-      tail -f /tmp/koboldcpp.log 2>/dev/null || echo "KoboldCpp logs will appear here..."
+      tail -f /tmp/koboldcpp.log 2>/dev/null || \
+           echo "KoboldCpp logs will appear here..."
 
 # Port configuration for KoboldCpp server
 ports:
