@@ -13,6 +13,7 @@ echo ""
 
 # Create test directory
 TEST_DIR="/tmp/distributed-network-test"
+rm -rf "$TEST_DIR"  # Clean up any previous runs
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
@@ -21,10 +22,12 @@ echo ""
 
 # Copy all necessary files
 echo "📋 Copying network components..."
-cp /home/runner/work/ocguix/ocguix/distributed-network-coordinator.scm .
-cp /home/runner/work/ocguix/ocguix/network-communication-protocol.scm .
-cp /home/runner/work/ocguix/ocguix/cognitive-grammar-integration-agent.scm .
-cp /home/runner/work/ocguix/ocguix/*.scm .
+# Use the directory where this script is located, not hardcoded paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR"/distributed-network-coordinator.scm . 2>/dev/null || true
+cp "$SCRIPT_DIR"/network-communication-protocol.scm . 2>/dev/null || true
+cp "$SCRIPT_DIR"/cognitive-grammar-integration-agent.scm . 2>/dev/null || true
+cp "$SCRIPT_DIR"/*.scm . 2>/dev/null || true
 
 echo "✅ Network components copied"
 echo ""

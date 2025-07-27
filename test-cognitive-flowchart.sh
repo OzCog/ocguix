@@ -9,6 +9,7 @@ echo "============================================="
 
 # Create test directory
 TEST_DIR="/tmp/cognitive-flowchart-test"
+rm -rf "$TEST_DIR"  # Clean up any previous runs
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
@@ -16,8 +17,10 @@ echo "📁 Test directory: $TEST_DIR"
 echo ""
 
 # Copy source files to test directory
-cp /home/runner/work/ocguix/ocguix/*.scm .
-cp /home/runner/work/ocguix/ocguix/demo-cognitive-flowchart.sh .
+# Use the directory where this script is located, not hardcoded paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR"/*.scm . 2>/dev/null || true
+cp "$SCRIPT_DIR"/demo-cognitive-flowchart.sh . 2>/dev/null || true
 
 echo "🔍 Step 1: Simulating Registry Discovery Agent"
 echo "----------------------------------------------"
