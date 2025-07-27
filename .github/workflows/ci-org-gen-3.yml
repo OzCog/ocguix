@@ -101,11 +101,34 @@ jobs:
             sudo apt-get update && sudo apt-get install -y postgresql-client
           fi
           
-          # Wait for PostgreSQL to be ready
-          until pg_isready -h localhost -p 5432; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 2
+          # Wait for PostgreSQL to be ready with timeout
+          echo "Waiting for PostgreSQL to be ready..."
+          MAX_RETRIES=30
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if pg_isready -h localhost -p 5432; then
+              echo "✅ PostgreSQL is ready!"
+              break
+            else
+              echo "⏳ PostgreSQL not ready yet (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+              sleep 2
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+            fi
           done
+          
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "❌ PostgreSQL failed to become ready after $MAX_RETRIES attempts"
+            echo "🔍 Debugging PostgreSQL connection..."
+            echo "Service status:"
+            docker ps | grep postgres || echo "No postgres containers found"
+            echo "Network connectivity test:"
+            nc -zv localhost 5432 || echo "Port 5432 not accessible"
+            echo "PostgreSQL logs:"
+            docker logs $(docker ps -q --filter ancestor=opencog/postgres) 2>/dev/null || echo "No postgres container logs available"
+            exit 1
+          fi
+          
           # Create the root role that may be expected by some components
           psql -h localhost -p 5432 -U opencog_test -d atomspace_db -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'rootpassword';" || echo "Root role may already exist or creation failed"
         env:
