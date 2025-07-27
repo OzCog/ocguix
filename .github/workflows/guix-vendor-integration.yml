@@ -1,5 +1,8 @@
 name: 'Guix Monorepo Vendor Integration - Cogutil'
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main, master ]
