@@ -1,5 +1,6 @@
 import threading
 from flask import Flask, request
+import html
 from python.helpers import runtime, dotenv, process
 from python.helpers.print_style import PrintStyle
 
@@ -33,7 +34,11 @@ def run():
     # handle api request
     @app.route("/", methods=["POST"])
     async def handle_request():
-        return await tunnel.handle_request(request=request)  # type: ignore
+        sanitized_request = {
+            key: html.escape(value) if isinstance(value, str) else value
+            for key, value in request.values.items()
+        }
+        return await tunnel.handle_request(request=sanitized_request)  # type: ignore
 
     try:
         server = make_server(
