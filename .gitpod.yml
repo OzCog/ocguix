@@ -1,53 +1,59 @@
 # Gitpod Configuration for OpenCog Cognitive Ecosystem
+# Complete one-click deployment solution with automated Guix build & deploy process
 # Addresses issue #69: docker pull gitpod/workspace-python-3.10:2025-07-23-06-50-33
 # Part of madness meta-issue #68
 
-image: gitpod/workspace-python-3.10:2025-07-23-06-50-33
+image:
+  file: .gitpod.Dockerfile
 
-# Configure the workspace with required tools and dependencies
+# Configure the workspace with automated deployment and comprehensive error handling
 tasks:
-  - name: "Setup Cognitive Ecosystem"
+  - name: "Environment Setup"
     init: |
-      # Install system dependencies
-      sudo apt-get update
-      sudo apt-get install -y build-essential cmake make pkg-config wget curl git
-      
-      # Install Guile for cognitive agents
-      sudo apt-get install -y guile-3.0 guile-3.0-dev
-      
-      # Install Python dependencies for agent integration
-      pip install requests flask fastapi uvicorn numpy scipy
-      
-      # Make scripts executable
-      chmod +x *.sh *.scm
-      
-      # Download KoboldCpp and prepare environment
-      echo "🤖 Setting up KoboldCpp environment..."
-      ./koboldcpp-setup.sh --setup-only
-      
+      echo "🔧 Initializing OpenCog Cognitive Ecosystem Environment..."
+      ./.gitpod/setup.sh
     command: |
+      echo "✅ Environment setup completed"
+      echo "Ready for main deployment..."
+
+  - name: "Main Deployment"
+    init: |
+      echo "🚀 Starting automated deployment with Guix integration..."
+      ./.gitpod/deploy.sh
+    command: |
+      echo ""
       echo "🧠 OpenCog Cognitive Ecosystem Ready!"
       echo "=================================================="
       echo ""
-      echo "Available tools:"
-      echo "  • koboldcpp-setup.sh - Complete KoboldCpp setup and server"
-      echo "  • cognitive-grammar-integration-agent.scm - Distributed cognitive grammar"
-      echo "  • ocpkg - OpenCog package management"
-      echo "  • demo-cognitive-flowchart.sh - Cognitive pipeline demo"
+      echo "🌐 Available Services:"
+      echo "  • KoboldCpp Web Interface: Port 5001 (auto-forwarded)"
+      echo "  • Cognitive Grammar Agent: ./cognitive-grammar-integration-agent.scm"
+      echo "  • Package Management: ./ocpkg"
       echo ""
-      echo "Quick start:"
-      echo "  1. Run: ./koboldcpp-setup.sh"
-      echo "  2. Access web interface via port 5001"
-      echo "  3. Test cognitive grammar: ./cognitive-grammar-integration-agent.scm --test"
+      echo "🚀 Quick Start Commands:"
+      echo "  • Test cognitive pipeline: ./test-cognitive-flowchart.sh"
+      echo "  • Run demo: ./demo-cognitive-flowchart.sh"
+      echo "  • Check deployment status: cat /tmp/deployment-status.txt"
+      echo "  • View logs: tail -f /tmp/opencog-deploy.log"
       echo ""
-      echo "📋 See TECHNICAL-ARCHITECTURE.md for detailed documentation"
+      echo "📚 Documentation:"
+      echo "  • Deployment Guide: .gitpod/README.md"
+      echo "  • Troubleshooting: .gitpod/TROUBLESHOOTING.md"
+      echo "  • Architecture: TECHNICAL-ARCHITECTURE.md"
+      echo ""
+      echo "🎯 Zero-configuration deployment completed!"
 
-  - name: "KoboldCpp Server"
+  - name: "KoboldCpp Server (Background)"
     command: |
-      echo "⏳ Waiting for initial setup to complete..."
-      sleep 30
-      echo "🚀 Starting KoboldCpp server..."
-      ./koboldcpp-setup.sh --start-only
+      echo "⏳ Waiting for deployment to complete..."
+      # Wait for main deployment to finish
+      while [ ! -f /tmp/deployment-status.txt ] || ! grep -q "completed" /tmp/deployment-status.txt; do
+        sleep 5
+        echo "Waiting for deployment..."
+      done
+      echo "🚀 KoboldCpp server starting automatically..."
+      # Server started by deploy.sh, this task just monitors
+      tail -f /tmp/koboldcpp.log 2>/dev/null || echo "KoboldCpp logs will appear here..."
 
 # Port configuration for KoboldCpp server
 ports:
