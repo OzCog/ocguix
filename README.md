@@ -1,16 +1,38 @@
 ## Collection of scripts
 
-### 🧠 Cognitive Ecosystem (New - Issue #68 "madness")
+### 🚀 One-Click Gitpod Deployment (Recommended)
 
-This repository now includes a complete cognitive ecosystem integrating:
+**Get OpenCog running in your browser in 2-3 minutes with zero configuration!**
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/OzCog/ocguix)
+
+**✨ Complete deployment solution featuring:**
+- **Automated Guix installation** with graceful fallbacks
+- **KoboldCpp language model server** ready on port 5001
+- **Cognitive grammar agents** and distributed processing
+- **Comprehensive error handling** and deployment logging
+- **Zero-configuration experience** - just click and use!
+
+**🔧 What gets deployed automatically:**
+- GNU Guix package manager for reproducible builds
+- Complete OpenCog cognitive ecosystem
+- KoboldCpp web interface for AI model interaction
+- Distributed cognitive grammar processing agents
+- Full development environment with VS Code integration
+
+📚 **Deployment Documentation**: [.gitpod/README.md](.gitpod/README.md) | **Troubleshooting**: [.gitpod/TROUBLESHOOTING.md](.gitpod/TROUBLESHOOTING.md)
+
+---
+
+### 🧠 Cognitive Ecosystem (Enhanced with Complete Gitpod Deployment)
+
+This repository includes a complete cognitive ecosystem with **one-click cloud deployment**:
 - **KoboldCpp** local language model inference
 - **Agent-Zero** agentic framework integration  
 - **Distributed cognitive grammar** network processing
 - **OpenCog AtomSpace** knowledge representation
 - **Guix-based** reproducible environments
-
-#### Quick Start (Gitpod)
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/OzCog/ocguix)
+- **Comprehensive Gitpod integration** with automated deployment
 
 #### Quick Start (Local)
 ```bash
