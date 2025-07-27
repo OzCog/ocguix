@@ -96,6 +96,7 @@ jobs:
 
       # 5. Clone Missing Repositories (Monorepo Format - No Submodules)
       - name: Clone Missing OpenCog Repositories
+        shell: bash
         run: |
           echo "📦 Cloning missing OpenCog repositories for monorepo structure..."
 
@@ -177,6 +178,7 @@ jobs:
 
       # 7. Validate Guix Integration and Repository Structure
       - name: Validate Guix Integration and Repository Structure
+        shell: bash
         run: |
           echo "🔍 Validating Guix integration and repository structure..."
 
@@ -709,6 +711,7 @@ jobs:
       # Summary: Guix Integration Results
       - name: Guix Integration Summary
         if: always()
+        shell: bash
         run: |
           echo "🎯 Guix Integration Summary"
           echo "=========================="
