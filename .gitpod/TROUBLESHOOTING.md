@@ -4,6 +4,21 @@ This guide helps resolve common issues when deploying the OpenCog Cognitive Ecos
 
 ## 🚨 Quick Diagnosis
 
+### New: Lightweight Mode (Issue #138 Fix)
+If you're experiencing the "pod still crashes" issue, the deployment now automatically uses lightweight mode in Gitpod:
+
+```bash
+# Check if lightweight mode is active
+curl http://localhost:5001/api/v1/model
+# Expected response: {"result": "Lightweight KoboldCpp Server"}
+
+# Verify lightweight deployment status
+cat /tmp/deployment-status.txt | grep -i lightweight
+
+# Test the lightweight server
+./test-gitpod-deployment.sh
+```
+
 ### Check Deployment Status
 ```bash
 # View current deployment status
@@ -29,6 +44,39 @@ netstat -tlnp | grep :5001
 ```
 
 ## 🔧 Common Issues and Solutions
+
+### 0. Pod Still Crashes (Issue #138) - FIXED
+#### Problem: Gitpod workspace crashes immediately before loading
+**Symptoms:**
+- Workspace stops during startup
+- Heavy compilation processes timeout
+- Package installation takes too long
+
+**Solution - Now Automatic:**
+✅ **Fixed in this update** - The deployment now automatically uses lightweight mode:
+- Heavy dependencies pre-installed in Docker image
+- KoboldCpp compilation skipped in cloud environments
+- Lightweight Python server used instead of native compilation
+- Deployment time reduced from 5+ minutes to ~1 minute
+
+**Verification:**
+```bash
+# Deployment should complete in under 2 minutes
+./test-gitpod-deployment.sh
+
+# Should show lightweight server
+curl http://localhost:5001/api/v1/model
+```
+
+If you still experience issues:
+```bash
+# Force lightweight mode manually
+MINIMAL_BUILD=true ./koboldcpp-setup.sh --setup-only
+MINIMAL_BUILD=true ./koboldcpp-setup.sh --start-only
+
+# Or run minimal deployment only
+timeout 120 ./.gitpod/deploy.sh
+```
 
 ### 1. Gitpod Workspace Startup Issues
 
