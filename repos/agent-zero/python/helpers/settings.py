@@ -1206,14 +1206,17 @@ def get_runtime_config(set: Settings):
 
 
 def create_auth_token() -> str:
+    from argon2 import PasswordHasher
+
     username = dotenv.get_dotenv_value(dotenv.KEY_AUTH_LOGIN) or ""
     password = dotenv.get_dotenv_value(dotenv.KEY_AUTH_PASSWORD) or ""
     if not username or not password:
         return "0"
-    # use base64 encoding for a more compact token with alphanumeric chars
-    hash_bytes = hashlib.sha256(f"{username}:{password}".encode()).digest()
+    # use Argon2 to securely hash the password
+    ph = PasswordHasher()
+    hash_str = ph.hash(f"{username}:{password}")
     # encode as base64 and remove any non-alphanumeric chars (like +, /, =)
-    b64_token = base64.urlsafe_b64encode(hash_bytes).decode().replace("=", "")
+    b64_token = base64.urlsafe_b64encode(hash_str.encode()).decode().replace("=", "")
     return b64_token[:16]
 
 
