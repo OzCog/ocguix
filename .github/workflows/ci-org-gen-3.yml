@@ -35,13 +35,13 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      # 1. Checkout the Repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # 2. Ensure tar is installed
+      # 1. Ensure tar is installed
       - name: Ensure tar is installed
         run: sudo apt-get update && sudo apt-get install -y tar
+
+      # 2. Checkout the Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       # 3. Setup Guix Environment
       - name: Setup Guix Environment
