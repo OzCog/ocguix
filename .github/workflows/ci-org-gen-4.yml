@@ -195,7 +195,7 @@ jobs:
           # Validate repository structure
           echo "📋 Repository structure validation:"
           MISSING_REPOS=()
-          REQUIRED_REPOS=(cogutil atomspace atomspace-storage atomspace-rocks atomspace-restful cogserver unify ure spacetime attention miner pln moses asmoses lg-atomese learn pattern-index vision opencog benchmark)
+          REQUIRED_REPOS=(cogutil atomspace atomspace-storage atomspace-rocks atomspace-restful cogserver unify ure spacetime attention miner pln moses asmoses lg-atomese learn pattern-index vision opencog)
 
           for repo in "${REQUIRED_REPOS[@]}"; do
             if [ -d "$repo" ] && [ -f "$repo/CMakeLists.txt" ]; then
