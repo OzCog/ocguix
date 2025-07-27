@@ -46,7 +46,12 @@ class ImageGet(ApiHandler):
 
             # send image file right away if dockerized, if development, read it from docker and send
             if runtime.is_dockerized():
-                response = send_file(path)
+                # Normalize and validate the path before sending the file
+                base_dir = files.get_base_dir() if hasattr(files, "get_base_dir") else os.getcwd()
+                normalized_path = os.path.normpath(os.path.join(base_dir, path))
+                if not normalized_path.startswith(base_dir):
+                    raise ValueError("Path is outside of allowed directory")
+                response = send_file(normalized_path)
             else:
                 b64_content = await runtime.call_development_function(
                     files.read_file_base64, path
