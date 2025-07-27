@@ -10,16 +10,50 @@ name: CI Org Gen 3
   pull_request:
     branches: [main, master]
 
+#env:
+#  CCACHE_DIR: /ws/ccache
+#  MAKEFLAGS: -j2
+#  GUIX_PROFILE: /var/guix/profiles/per-user/root/current-guix
+#  PATH: /var/guix/profiles/per-user/root/current-guix/bin:$PATH
+
+#jobs:
+#  build-and-test:
+#    name: Build and Test All Components
+#    runs-on: ubuntu-latest
+#    services:
+#      opencog-postgres:
+#        image: opencog/postgres
+#        env:
+#          POSTGRES_USER: opencog_test
+#          POSTGRES_PASSWORD: cheese
+#          POSTGRES_DB: atomspace_db
+#        ports:
+#          - 5432:5432
+#        options: >-
+#          --health-cmd pg_isready
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 5
+#    steps:
+#      # 1. Checkout the Repository
+#      - name: Checkout Repository
+#        uses: actions/checkout@v4
+
 env:
   CCACHE_DIR: /ws/ccache
   MAKEFLAGS: -j2
-  GUIX_PROFILE: /var/guix/profiles/per-user/root/current-guix
-  PATH: /var/guix/profiles/per-user/root/current-guix/bin:$PATH
 
 jobs:
   build-and-test:
     name: Build and Test All Components
     runs-on: ubuntu-latest
+    container:
+      image: opencog/opencog-deps
+      options: --user root
+      env:
+        CCACHE_DIR: /ws/ccache
+        MAKEFLAGS: -j2
+
     services:
       opencog-postgres:
         image: opencog/postgres
@@ -34,6 +68,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       # 1. Checkout the Repository
       - name: Checkout Repository
