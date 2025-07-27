@@ -88,7 +88,6 @@ jobs:
             ["pattern-index"]="https://github.com/opencog/pattern-index.git"
             ["vision"]="https://github.com/opencog/vision.git"
             ["opencog"]="https://github.com/opencog/opencog.git"
-            ["benchmark"]="https://github.com/opencog/benchmark.git"
           )
           
           # Clone repositories if they don't exist
@@ -414,16 +413,6 @@ jobs:
           sudo ldconfig
           cd ../..
 
-      # Build and Install benchmark
-      - name: Build and Install benchmark
-        run: |
-          mkdir -p benchmark/build && cd benchmark/build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make -j2
-          sudo make install
-          sudo ldconfig
-          cd ../..
-
       # Run Tests for Each Component
       - name: Run Tests
         run: |
@@ -541,12 +530,6 @@ jobs:
           make check ARGS="$MAKEFLAGS"
           cd ../..
 
-          # benchmark Tests
-          cd benchmark/build
-          make tests
-          make check ARGS="$MAKEFLAGS"
-          cd ../..
-
       # Upload Test Logs
       - name: Upload Test Logs
         if: always()
@@ -573,7 +556,6 @@ jobs:
             pattern-index/build/Testing/Temporary/LastTest.log
             vision/build/Testing/Temporary/LastTest.log
             opencog/build/Testing/Temporary/LastTest.log
-            benchmark/build/Testing/Temporary/LastTest.log
 
       # (Optional) Package Components
       - name: Package Components
@@ -674,11 +656,6 @@ jobs:
           make package || echo "opencog package target not defined."
           cd ../..
 
-          # benchmark Packaging
-          cd benchmark/build
-          make package || echo "benchmark package target not defined."
-          cd ../..
-
       # Upload Build Artifacts
       - name: Upload Build Artifacts
         if: always()
@@ -705,7 +682,6 @@ jobs:
             pattern-index/build/
             vision/build/
             opencog/build/
-            benchmark/build/
 
       # Summary: Guix Integration Results
       - name: Guix Integration Summary
