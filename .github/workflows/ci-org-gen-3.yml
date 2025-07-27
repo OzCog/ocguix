@@ -20,14 +20,6 @@ jobs:
   build-and-test:
     name: Build and Test All Components
     runs-on: ubuntu-latest
-    container:
-      image: opencog/opencog-deps
-      options: --user root
-      env:
-        CCACHE_DIR: /ws/ccache
-        MAKEFLAGS: -j2
-        GUIX_PROFILE: /var/guix/profiles/per-user/root/current-guix
-        PATH: /var/guix/profiles/per-user/root/current-guix/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     services:
       opencog-postgres:
         image: opencog/postgres
