@@ -39,7 +39,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup Guix Environment
+      # 2. Ensure tar is installed
+      - name: Ensure tar is installed
+        run: sudo apt-get update && sudo apt-get install -y tar
+
+      # 3. Setup Guix Environment
       - name: Setup Guix Environment
         run: |
           echo "🔧 Installing Guix for reproducible builds..."
@@ -53,7 +57,26 @@ jobs:
             echo "⚠️ Guix installation may be incomplete, falling back to apt"
           fi
 
-      # 3. Clone Missing Repositories (Monorepo Format - No Submodules)
+      # 4. Create root role in PostgreSQL
+      - name: Create root role in PostgreSQL
+        run: |
+          # Install PostgreSQL client tools if not available
+          if ! command -v psql &> /dev/null; then
+            echo "Installing PostgreSQL client tools..."
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          
+          # Wait for PostgreSQL to be ready
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
+          # Create the root role that may be expected by some components
+          psql -h localhost -p 5432 -U opencog_test -d atomspace_db -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'rootpassword';" || echo "Root role may already exist or creation failed"
+        env:
+          PGPASSWORD: cheese
+
+      # 5. Clone Missing Repositories (Monorepo Format - No Submodules)
       - name: Clone Missing OpenCog Repositories
         run: |
           echo "📦 Cloning missing OpenCog repositories for monorepo structure..."
@@ -115,7 +138,7 @@ jobs:
             fi
           done
 
-      # 4. Install Build Dependencies with Guix Integration
+      # 6. Install Build Dependencies with Guix Integration
       - name: Install Build Dependencies
         run: |
           # Try to use Guix first, fall back to apt
@@ -134,7 +157,7 @@ jobs:
             sudo apt-get install -y ccache pkg-config cmake build-essential git
           fi
 
-      # 5. Validate Guix Integration and Repository Structure
+      # 7. Validate Guix Integration and Repository Structure
       - name: Validate Guix Integration and Repository Structure
         run: |
           echo "🔍 Validating Guix integration and repository structure..."
