@@ -18,7 +18,11 @@ class BackupCreate(ApiHandler):
             include_patterns = input.get("include_patterns", [])
             exclude_patterns = input.get("exclude_patterns", [])
             include_hidden = input.get("include_hidden", False)
+            from werkzeug.utils import secure_filename
             backup_name = input.get("backup_name", "agent-zero-backup")
+            backup_name = secure_filename(backup_name)
+            if not backup_name or backup_name == ".zip":
+                backup_name = "agent-zero-backup"
 
             # Support legacy string patterns format for backward compatibility
             patterns_string = input.get("patterns", "")

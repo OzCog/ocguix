@@ -363,6 +363,10 @@ class BackupService:
 
         # Create temporary zip file
         temp_dir = tempfile.mkdtemp()
+        from werkzeug.utils import secure_filename
+        backup_name = secure_filename(backup_name)
+        if not backup_name or backup_name == ".zip":
+            backup_name = "agent-zero-backup"
         zip_path = os.path.join(temp_dir, f"{backup_name}.zip")
 
         try:
