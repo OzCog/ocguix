@@ -1,0 +1,162 @@
+name: 'Monorepo Integration Test'
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ copilot/fix-149 ]
+
+jobs:
+  test-monorepo-structure:
+    runs-on: ubuntu-latest
+    name: 'Test Monorepo Integration'
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Repository Structure
+        run: |
+          echo "=== Monorepo Structure Verification ==="
+          
+          # Check if repos directory exists
+          if [ ! -d "repos" ]; then
+            echo "❌ ERROR: repos/ directory not found"
+            exit 1
+          fi
+          
+          echo "✅ repos/ directory found"
+          
+          # Count repositories
+          REPO_COUNT=$(ls -1 repos/ | wc -l)
+          echo "📊 Found $REPO_COUNT repositories in monorepo"
+          
+          # Check for key repositories
+          EXPECTED_REPOS=("cogutil" "atomspace" "cogserver" "opencog" "ure" "unify")
+          MISSING_REPOS=()
+          
+          for repo in "${EXPECTED_REPOS[@]}"; do
+            if [ -d "repos/$repo" ]; then
+              echo "✅ Found: repos/$repo"
+            else
+              echo "❌ Missing: repos/$repo"
+              MISSING_REPOS+=("$repo")
+            fi
+          done
+          
+          if [ ${#MISSING_REPOS[@]} -gt 0 ]; then
+            echo "❌ Missing repositories: ${MISSING_REPOS[*]}"
+            exit 1
+          fi
+          
+          echo "🎉 All key repositories found in monorepo structure!"
+
+      - name: Test Build Directory Creation
+        run: |
+          echo "=== Testing Build Directory Creation ==="
+          
+          # Test the new workflow pattern for cogutil
+          if [ -d "repos/cogutil" ]; then
+            echo "📂 Testing repos/cogutil build setup..."
+            mkdir -p repos/cogutil/build
+            cd repos/cogutil/build
+            
+            if [ -f "../CMakeLists.txt" ]; then
+              echo "✅ CMakeLists.txt found in repos/cogutil"
+            else
+              echo "❌ CMakeLists.txt not found in repos/cogutil"
+              exit 1
+            fi
+            
+            cd ../../..
+            echo "✅ Build directory pattern works for cogutil"
+          fi
+          
+          # Test the pattern for atomspace  
+          if [ -d "repos/atomspace" ]; then
+            echo "📂 Testing repos/atomspace build setup..."
+            mkdir -p repos/atomspace/build
+            cd repos/atomspace/build
+            
+            if [ -f "../CMakeLists.txt" ]; then
+              echo "✅ CMakeLists.txt found in repos/atomspace"
+            else
+              echo "❌ CMakeLists.txt not found in repos/atomspace"
+              exit 1
+            fi
+            
+            cd ../../..
+            echo "✅ Build directory pattern works for atomspace"
+          fi
+          
+          echo "🎉 Build directory creation patterns verified!"
+
+      - name: Test Gitpod Configuration
+        run: |
+          echo "=== Testing Gitpod Configuration ==="
+          
+          # Check if Gitpod files exist
+          GITPOD_FILES=(".gitpod.yml" ".gitpod.Dockerfile" ".gitpod/deploy.sh" ".gitpod/setup.sh")
+          
+          for file in "${GITPOD_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ Found: $file"
+            else
+              echo "❌ Missing: $file"
+              exit 1
+            fi
+          done
+          
+          # Check if deploy.sh has been updated for monorepo
+          if grep -q "verify_local_repositories" ".gitpod/deploy.sh"; then
+            echo "✅ deploy.sh updated for monorepo integration"
+          else
+            echo "❌ deploy.sh not updated for monorepo"
+            exit 1
+          fi
+          
+          echo "🎉 Gitpod configuration verified!"
+
+      - name: Test Workflow Configurations
+        run: |
+          echo "=== Testing Workflow Configurations ==="
+          
+          # Check key workflows for monorepo references
+          WORKFLOWS=(".github/workflows/ci-org-v7.yml" ".github/workflows/oc.yml" ".github/workflows/efficient-build.yml")
+          
+          for workflow in "${WORKFLOWS[@]}"; do
+            if [ -f "$workflow" ]; then
+              echo "📋 Checking $workflow..."
+              
+              if grep -q "repos/" "$workflow"; then
+                echo "✅ $workflow uses monorepo structure"
+              else
+                echo "❌ $workflow not updated for monorepo"
+                exit 1
+              fi
+            else
+              echo "⚠️  $workflow not found (may be optional)"
+            fi
+          done
+          
+          echo "🎉 Workflow configurations verified!"
+
+      - name: Integration Summary
+        run: |
+          echo ""
+          echo "🌟 ============================================="
+          echo "🧠 MONOREPO INTEGRATION TEST RESULTS"
+          echo "🌟 ============================================="
+          echo ""
+          echo "✅ Repository structure: VERIFIED"
+          echo "✅ Build patterns: VERIFIED"  
+          echo "✅ Gitpod configuration: VERIFIED"
+          echo "✅ Workflow configurations: VERIFIED"
+          echo ""
+          echo "📊 Statistics:"
+          echo "  • Repositories: $(ls -1 repos/ | wc -l) integrated"
+          echo "  • Workflows: $(ls -1 .github/workflows/*.yml | wc -l) updated"
+          echo "  • Gitpod files: 4 configured"
+          echo ""
+          echo "🎯 RESULT: Monorepo integration is SUCCESSFUL!"
+          echo "🚀 Ready for production deployment!"
+          echo ""

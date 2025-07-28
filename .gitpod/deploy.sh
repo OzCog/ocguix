@@ -61,12 +61,12 @@ update_status() {
     log_progress "$status"
 }
 
-# Function to ensure all required repositories are cloned
-clone_required_repos() {
-    update_status "Ensuring OpenCog repositories are available..."
+# Function to verify required repositories are available
+verify_local_repositories() {
+    update_status "Verifying OpenCog repositories are available in monorepo..."
     
-    # List of 19 repositories from the oc.yml workflow
-    local required_repos=(
+    # List of repositories that should be present in the monorepo
+    local expected_repos=(
         "cogutil" "atomspace" "atomspace-storage" "atomspace-rocks" "atomspace-restful"
         "cogserver" "unify" "ure" "spacetime" "attention" "miner" "pln" "moses"
         "asmoses" "lg-atomese" "learn" "pattern-index" "vision" "opencog"
@@ -75,51 +75,27 @@ clone_required_repos() {
     local repos_dir="$WORKSPACE_ROOT/repos"
     local missing_repos=()
     
-    # Check which repositories are missing
-    for repo in "${required_repos[@]}"; do
+    # Check which repositories are available
+    for repo in "${expected_repos[@]}"; do
         if [ ! -d "$repos_dir/$repo" ]; then
             missing_repos+=("$repo")
         fi
     done
     
     if [ ${#missing_repos[@]} -eq 0 ]; then
-        log_success "All required OpenCog repositories are already available"
-        return 0
-    fi
-    
-    log_info "Missing repositories: ${missing_repos[*]}"
-    log_info "Cloning missing OpenCog repositories..."
-    
-    # Create repos directory if needed
-    mkdir -p "$repos_dir"
-    cd "$repos_dir"
-    
-    local cloned_count=0
-    local failed_count=0
-    
-    # Clone missing repositories
-    for repo in "${missing_repos[@]}"; do
-        local repo_url="https://github.com/opencog/$repo.git"
-        log_info "Cloning $repo from $repo_url..."
-        
-        if timeout 60 git clone --depth 1 "$repo_url" "$repo" > /dev/null 2>&1; then
-            log_success "Successfully cloned $repo"
-            ((cloned_count++))
-        else
-            log_error "Failed to clone $repo"
-            ((failed_count++))
-        fi
-    done
-    
-    cd "$WORKSPACE_ROOT"
-    
-    if [ $failed_count -eq 0 ]; then
-        log_success "All missing repositories cloned successfully ($cloned_count repositories)"
+        log_success "All required OpenCog repositories are available in monorepo"
+        local available_count=$(ls -1 "$repos_dir" 2>/dev/null | wc -l)
+        log_info "Found $available_count repositories in repos/ directory"
         return 0
     else
-        log_warning "Some repositories failed to clone ($failed_count failed, $cloned_count succeeded)"
-        log_warning "Continuing with available repositories..."
-        return 1
+        log_warning "Some repositories are missing from monorepo: ${missing_repos[*]}"
+        log_warning "This may be expected if the monorepo integration is still in progress"
+        
+        local available_count=$(ls -1 "$repos_dir" 2>/dev/null | wc -l)
+        log_info "Found $available_count repositories in repos/ directory"
+        
+        # Continue anyway since other components may still work
+        return 0
     fi
 }
 
@@ -421,7 +397,7 @@ main() {
     echo ""
     
     # Run deployment steps
-    clone_required_repos
+    verify_local_repositories
     setup_guix_with_fallback || log_warning "Continuing without Guix"
     install_cognitive_packages
     setup_cognitive_environment

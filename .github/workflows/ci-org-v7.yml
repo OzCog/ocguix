@@ -52,188 +52,161 @@ jobs:
       # 3. Build and Install CogUtil
       - name: Build and Install CogUtil
         run: |
-          # Clean existing directory
-          rm -rf cogutil
-          # Clone the repository
-          git clone https://github.com/opencog/cogutil.git
-          mkdir -p cogutil/build
-          cd cogutil/build
+          # Use local repository from monorepo
+          mkdir -p repos/cogutil/build
+          cd repos/cogutil/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 4. Build and Install AtomSpace
       - name: Build and Install AtomSpace
         run: |
-          # Clean existing directory
-          rm -rf atomspace
-          # Clone the repository
-          git clone https://github.com/opencog/atomspace.git
-          mkdir -p atomspace/build
-          cd atomspace/build
+          # Use local repository from monorepo
+          mkdir -p repos/atomspace/build
+          cd repos/atomspace/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 5. Build and Install CogServer
       - name: Build and Install CogServer
         run: |
-          # Clean existing directory
-          rm -rf cogserver
-          # Clone the repository
-          git clone https://github.com/opencog/cogserver.git
-          mkdir -p cogserver/build
-          cd cogserver/build
+          # Use local repository from monorepo
+          mkdir -p repos/cogserver/build
+          cd repos/cogserver/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 6. Build and Install OpenCog
       - name: Build and Install OpenCog
         run: |
-          # Clean existing directory
-          rm -rf opencog
-          # Clone the repository
-          git clone https://github.com/opencog/opencog.git
-          mkdir -p opencog/build
-          cd opencog/build
+          # Use local repository from monorepo
+          mkdir -p repos/opencog/build
+          cd repos/opencog/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 7. Build and Install AsmoSES
       - name: Build and Install AsmoSES
         run: |
-          # Clean existing directory
-          rm -rf asmoses
-          # Clone the repository
-          git clone https://github.com/opencog/asmoses.git
-          mkdir -p asmoses/build
-          cd asmoses/build
+          # Use local repository from monorepo
+          mkdir -p repos/asmoses/build
+          cd repos/asmoses/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 8. Build and Install URE
       - name: Build and Install URE
         run: |
-          # Clean existing directory
-          rm -rf ure
-          # Clone the repository
-          git clone https://github.com/opencog/ure.git
-          mkdir -p ure/build
-          cd ure/build
+          # Use local repository from monorepo
+          mkdir -p repos/ure/build
+          cd repos/ure/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 9. Build and Install Unify
       - name: Build and Install Unify
         run: |
-          # Clean existing directory
-          rm -rf unify
-          # Clone the repository
-          git clone https://github.com/opencog/unify.git
-          mkdir -p unify/build
-          cd unify/build
+          # Use local repository from monorepo
+          mkdir -p repos/unify/build
+          cd repos/unify/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 10. Build and Install Attention
       - name: Build and Install Attention
         run: |
-          # Clean existing directory
-          rm -rf attention
-          # Clone the repository
-          git clone https://github.com/opencog/attention.git
-          mkdir -p attention/build
-          cd attention/build
+          # Use local repository from monorepo
+          mkdir -p repos/attention/build
+          cd repos/attention/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 11. Build and Install Miner
       - name: Build and Install Miner
         run: |
-          # Clean existing directory
-          rm -rf miner
-          # Clone the repository
-          git clone https://github.com/opencog/miner.git
-          mkdir -p miner/build
-          cd miner/build
+          # Use local repository from monorepo
+          mkdir -p repos/miner/build
+          cd repos/miner/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j2
           sudo make install
           sudo ldconfig
-          cd ../..
+          cd ../../..
 
       # 12. Run Tests for Each Component
       - name: Run Tests
         run: |
           # AtomSpace Tests
-          cd atomspace/build
+          cd repos/atomspace/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # CogServer Tests
-          cd cogserver/build
+          cd repos/cogserver/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # OpenCog Tests
-          cd opencog/build
+          cd repos/opencog/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # AsmoSES Tests
-          cd asmoses/build
+          cd repos/asmoses/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # URE Tests
-          cd ure/build
+          cd repos/ure/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # Unify Tests
-          cd unify/build
+          cd repos/unify/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # Attention Tests
-          cd attention/build
+          cd repos/attention/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
           # Miner Tests
-          cd miner/build
+          cd repos/miner/build
           make tests
           make check ARGS="$MAKEFLAGS"
-          cd ../..
+          cd ../../..
 
       # 13. Upload Test Logs
       - name: Upload Test Logs
@@ -242,23 +215,23 @@ jobs:
         with:
           name: test-logs
           path: |
-            atomspace/build/Testing/Temporary/LastTest.log
-            cogserver/build/Testing/Temporary/LastTest.log
-            opencog/build/Testing/Temporary/LastTest.log
-            asmoses/build/Testing/Temporary/LastTest.log
-            ure/build/Testing/Temporary/LastTest.log
-            unify/build/Testing/Temporary/LastTest.log
-            attention/build/Testing/Temporary/LastTest.log
-            miner/build/Testing/Temporary/LastTest.log
+            repos/atomspace/build/Testing/Temporary/LastTest.log
+            repos/cogserver/build/Testing/Temporary/LastTest.log
+            repos/opencog/build/Testing/Temporary/LastTest.log
+            repos/asmoses/build/Testing/Temporary/LastTest.log
+            repos/ure/build/Testing/Temporary/LastTest.log
+            repos/unify/build/Testing/Temporary/LastTest.log
+            repos/attention/build/Testing/Temporary/LastTest.log
+            repos/miner/build/Testing/Temporary/LastTest.log
 
       # 14. (Optional) Package Components
       - name: Package Components
         if: github.ref == 'refs/heads/main'
         run: |
           # AtomSpace Packaging
-          cd atomspace/build
+          cd repos/atomspace/build
           make package || echo "AtomSpace package target not defined."
-          cd ../..
+          cd ../../..
 
           # Repeat packaging for other components as needed
 
@@ -269,12 +242,12 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            cogutil/build/
-            atomspace/build/
-            cogserver/build/
-            opencog/build/
-            asmoses/build/
-            ure/build/
-            unify/build/
-            attention/build/
-            miner/build/
+            repos/cogutil/build/
+            repos/atomspace/build/
+            repos/cogserver/build/
+            repos/opencog/build/
+            repos/asmoses/build/
+            repos/ure/build/
+            repos/unify/build/
+            repos/attention/build/
+            repos/miner/build/
