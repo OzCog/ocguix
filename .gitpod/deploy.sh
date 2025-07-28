@@ -61,6 +61,68 @@ update_status() {
     log_progress "$status"
 }
 
+# Function to ensure all required repositories are cloned
+clone_required_repos() {
+    update_status "Ensuring OpenCog repositories are available..."
+    
+    # List of 19 repositories from the oc.yml workflow
+    local required_repos=(
+        "cogutil" "atomspace" "atomspace-storage" "atomspace-rocks" "atomspace-restful"
+        "cogserver" "unify" "ure" "spacetime" "attention" "miner" "pln" "moses"
+        "asmoses" "lg-atomese" "learn" "pattern-index" "vision" "opencog"
+    )
+    
+    local repos_dir="$WORKSPACE_ROOT/repos"
+    local missing_repos=()
+    
+    # Check which repositories are missing
+    for repo in "${required_repos[@]}"; do
+        if [ ! -d "$repos_dir/$repo" ]; then
+            missing_repos+=("$repo")
+        fi
+    done
+    
+    if [ ${#missing_repos[@]} -eq 0 ]; then
+        log_success "All required OpenCog repositories are already available"
+        return 0
+    fi
+    
+    log_info "Missing repositories: ${missing_repos[*]}"
+    log_info "Cloning missing OpenCog repositories..."
+    
+    # Create repos directory if needed
+    mkdir -p "$repos_dir"
+    cd "$repos_dir"
+    
+    local cloned_count=0
+    local failed_count=0
+    
+    # Clone missing repositories
+    for repo in "${missing_repos[@]}"; do
+        local repo_url="https://github.com/opencog/$repo.git"
+        log_info "Cloning $repo from $repo_url..."
+        
+        if timeout 60 git clone --depth 1 "$repo_url" "$repo" > /dev/null 2>&1; then
+            log_success "Successfully cloned $repo"
+            ((cloned_count++))
+        else
+            log_error "Failed to clone $repo"
+            ((failed_count++))
+        fi
+    done
+    
+    cd "$WORKSPACE_ROOT"
+    
+    if [ $failed_count -eq 0 ]; then
+        log_success "All missing repositories cloned successfully ($cloned_count repositories)"
+        return 0
+    else
+        log_warning "Some repositories failed to clone ($failed_count failed, $cloned_count succeeded)"
+        log_warning "Continuing with available repositories..."
+        return 1
+    fi
+}
+
 # Function to setup Guix with fallback
 setup_guix_with_fallback() {
     update_status "Setting up GNU Guix package manager..."
@@ -322,6 +384,7 @@ display_summary() {
     echo "  • KoboldCpp Web Interface: http://localhost:5001"
     echo "  • Cognitive Grammar Agent: ./cognitive-grammar-integration-agent.scm"
     echo "  • Package Management: ./ocpkg"
+    echo "  • OpenCog Repositories: $(ls repos/ 2>/dev/null | wc -l) repositories in repos/"
     echo ""
     
     echo "🚀 Quick Start Commands:"
@@ -358,6 +421,7 @@ main() {
     echo ""
     
     # Run deployment steps
+    clone_required_repos
     setup_guix_with_fallback || log_warning "Continuing without Guix"
     install_cognitive_packages
     setup_cognitive_environment
