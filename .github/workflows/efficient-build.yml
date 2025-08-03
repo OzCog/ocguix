@@ -85,14 +85,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            orc-dv/cogutil/build
+            repos/cogutil/build
             ${{ env.INSTALL_PREFIX }}
-          key: cogutil-${{ runner.os }}-${{ hashFiles('orc-dv/cogutil/**') }}
+          key: cogutil-${{ runner.os }}-${{ hashFiles('repos/cogutil/**') }}
           
       - name: Build cogutil
         if: steps.cogutil-cache.outputs.cache-hit != 'true'
         run: |
-          cd orc-dv/cogutil
+          cd repos/cogutil
           mkdir -p build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
             -DBOOST_ROOT=/tmp/deps/miniconda -DCMAKE_PREFIX_PATH=/tmp/deps/miniconda
@@ -104,14 +104,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            orc-as/atomspace/build
+            repos/atomspace/build
             ${{ env.INSTALL_PREFIX }}
-          key: atomspace-${{ runner.os }}-${{ hashFiles('orc-as/atomspace/**') }}-${{ steps.cogutil-cache.outputs.cache-primary-key }}
+          key: atomspace-${{ runner.os }}-${{ hashFiles('repos/atomspace/**') }}-${{ steps.cogutil-cache.outputs.cache-primary-key }}
           
       - name: Build atomspace
         if: steps.atomspace-cache.outputs.cache-hit != 'true'
         run: |
-          cd orc-as/atomspace
+          cd repos/atomspace
           # Create lib directory if missing
           mkdir -p lib
           echo "# Build compatibility" > lib/CMakeLists.txt
@@ -129,9 +129,9 @@ jobs:
     strategy:
       matrix:
         component:
-          - { name: "ure", path: "ure", needs_unify: true }
-          - { name: "moses", path: "moses", needs_unify: false }
-          - { name: "cogserver", path: "cogserver", needs_unify: false }
+          - { name: "ure", path: "repos/ure", needs_unify: true }
+          - { name: "moses", path: "repos/moses", needs_unify: false }
+          - { name: "cogserver", path: "repos/cogserver", needs_unify: false }
     steps:
       - uses: actions/checkout@v4
       
@@ -145,7 +145,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            orc-dv/cogutil/build
+            repos/cogutil/build
             ${{ env.INSTALL_PREFIX }}
           key: ${{ needs.build-foundation.outputs.cogutil-cache-key }}
           
@@ -154,7 +154,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            orc-as/atomspace/build
+            repos/atomspace/build
             ${{ env.INSTALL_PREFIX }}
           key: ${{ needs.build-foundation.outputs.atomspace-cache-key }}
           
@@ -172,10 +172,9 @@ jobs:
       - name: Build unify (if needed)
         if: matrix.component.needs_unify
         run: |
-          # Clone and build unify for URE
-          git clone --depth 1 https://github.com/opencog/unify /tmp/unify
-          cd /tmp/unify
-          mkdir build && cd build
+          # Use local unify from monorepo instead of cloning
+          cd repos/unify
+          mkdir -p build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
             -DBOOST_ROOT=/tmp/deps/miniconda -DCMAKE_PREFIX_PATH=/tmp/deps/miniconda
           make -j$(nproc)
