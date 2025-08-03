@@ -44,11 +44,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 01. Install Build Dependencies
+      # Fix Git Ownership Issue
+      - name: Set Git Safe Directory
+        run: |
+          git config --global --add safe.directory ${{ github.workspace }}
+          git config --global --add safe.directory /__w/ocguix/ocguix
+
+      # 01. Install Build Dependencies including Valgrind
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache pkg-config cmake build-essential git
+          sudo apt-get install -y ccache pkg-config cmake build-essential git valgrind
 
       # 02. Build and Install cogutil
       - name: Build and Install cogutil
