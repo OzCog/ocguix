@@ -58,7 +58,7 @@ class AtomSpaceLink:
 
 class PythonAtomSpaceBridge:
     """
-    Python AtomSpace Bridge for SKZ Integration
+    Enhanced Python AtomSpace Bridge for SKZ Integration with Distributed Coordination
     Enables Python agents to communicate with Scheme cognitive agents via AtomSpace
     """
     
@@ -69,6 +69,11 @@ class PythonAtomSpaceBridge:
         self.links: Dict[str, AtomSpaceLink] = {}
         self.message_queue = queue.Queue()
         
+        # Enhanced coordination support
+        self.coordination_capabilities: Dict[str, Any] = {}
+        self.coordination_state: Dict[str, Any] = {}
+        self.event_subscriptions: Dict[str, List[str]] = {}
+        
         # Ensure communication directory exists
         os.makedirs(self.communication_dir, exist_ok=True)
         
@@ -76,11 +81,168 @@ class PythonAtomSpaceBridge:
         self.nodes_file = os.path.join(self.communication_dir, "atomspace_nodes.json")
         self.links_file = os.path.join(self.communication_dir, "atomspace_links.json")
         self.messages_file = os.path.join(self.communication_dir, "bridge_messages.json")
+        self.coordination_file = os.path.join(self.communication_dir, "coordination_state.json")
         
         # Load existing data if available
         self._load_existing_data()
         
         print(f"🐍 Python AtomSpace Bridge initialized for agent: {self.agent_id}")
+        self._load_coordination_state()
+    
+    def _load_coordination_state(self):
+        """Load coordination state from file"""
+        try:
+            if os.path.exists(self.coordination_file):
+                with open(self.coordination_file, 'r') as f:
+                    state_data = json.load(f)
+                    self.coordination_capabilities = state_data.get('capabilities', {})
+                    self.coordination_state = state_data.get('state', {})
+                    self.event_subscriptions = state_data.get('subscriptions', {})
+                    print(f"🤝 Loaded coordination state: {len(self.coordination_capabilities)} capabilities")
+        except Exception as e:
+            print(f"⚠️ Could not load coordination state: {e}")
+            
+    def _save_coordination_state(self):
+        """Save coordination state to file"""
+        try:
+            state_data = {
+                'agent_id': self.agent_id,
+                'capabilities': self.coordination_capabilities,
+                'state': self.coordination_state,
+                'subscriptions': self.event_subscriptions,
+                'updated_at': time.time()
+            }
+            with open(self.coordination_file, 'w') as f:
+                json.dump(state_data, f, indent=2)
+        except Exception as e:
+            print(f"⚠️ Could not save coordination state: {e}")
+
+    def register_coordination_capability(self, capability_type: str, description: str, 
+                                       parameters: Dict[str, Any] = None):
+        """Register a coordination capability for this agent"""
+        capability_id = f"{self.agent_id}-{capability_type}-{uuid.uuid4().hex[:8]}"
+        
+        self.coordination_capabilities[capability_type] = {
+            'capability_id': capability_id,
+            'description': description,
+            'parameters': parameters or {},
+            'registered_at': time.time()
+        }
+        
+        self._save_coordination_state()
+        print(f"📝 Registered coordination capability: {capability_type}")
+        
+        return capability_id
+
+    def coordinate_with_agent(self, target_agent: str, coordination_type: str, 
+                            coordination_data: Dict[str, Any]) -> str:
+        """Coordinate with another agent through AtomSpace"""
+        coordination_id = f"coordination-{uuid.uuid4().hex[:8]}"
+        
+        # Create coordination node in AtomSpace
+        coordination_node = self.create_node('CoordinationNode', coordination_id, {
+            'source_agent': self.agent_id,
+            'target_agent': target_agent,
+            'coordination_type': coordination_type,
+            'coordination_data': coordination_data,
+            'status': 'initiated',
+            'created_at': time.time()
+        })
+        
+        # Create coordination link
+        coordination_link = self.create_link(
+            'CoordinationLink', 
+            f"coordination-link-{coordination_id}",
+            self.agent_id, 
+            target_agent,
+            {
+                'coordination_id': coordination_id,
+                'coordination_type': coordination_type,
+                'data': coordination_data
+            }
+        )
+        
+        # Send coordination message
+        self.send_bridge_message('coordination_initiated', {
+            'coordination_id': coordination_id,
+            'source_agent': self.agent_id,
+            'target_agent': target_agent,
+            'coordination_type': coordination_type,
+            'data': coordination_data
+        })
+        
+        print(f"🤝 Initiated coordination: {self.agent_id} -> {target_agent} ({coordination_type})")
+        return coordination_id
+
+    def respond_to_coordination(self, coordination_id: str, response: str, 
+                              response_data: Dict[str, Any] = None):
+        """Respond to a coordination request"""
+        
+        # Update coordination state
+        self.coordination_state[coordination_id] = {
+            'response': response,
+            'response_data': response_data or {},
+            'responded_at': time.time(),
+            'respondent': self.agent_id
+        }
+        
+        # Send coordination response
+        self.send_bridge_message('coordination_response', {
+            'coordination_id': coordination_id,
+            'respondent': self.agent_id,
+            'response': response,
+            'response_data': response_data or {}
+        })
+        
+        self._save_coordination_state()
+        print(f"📨 Sent coordination response: {coordination_id} -> {response}")
+
+    def subscribe_to_coordination_events(self, event_types: List[str]):
+        """Subscribe to coordination events"""
+        for event_type in event_types:
+            if event_type not in self.event_subscriptions:
+                self.event_subscriptions[event_type] = []
+            if self.agent_id not in self.event_subscriptions[event_type]:
+                self.event_subscriptions[event_type].append(self.agent_id)
+        
+        self._save_coordination_state()
+        print(f"📡 Subscribed to coordination events: {event_types}")
+
+    def emit_coordination_event(self, event_type: str, event_data: Dict[str, Any]):
+        """Emit a coordination event to subscribed agents"""
+        event_id = f"event-{uuid.uuid4().hex[:8]}"
+        
+        # Create event node
+        event_node = self.create_node('CoordinationEventNode', event_id, {
+            'event_type': event_type,
+            'emitter': self.agent_id,
+            'event_data': event_data,
+            'emitted_at': time.time()
+        })
+        
+        # Send event message
+        self.send_bridge_message('coordination_event', {
+            'event_id': event_id,
+            'event_type': event_type,
+            'emitter': self.agent_id,
+            'event_data': event_data,
+            'subscribers': self.event_subscriptions.get(event_type, [])
+        })
+        
+        print(f"📡 Emitted coordination event: {event_type} ({event_id})")
+        return event_id
+
+    def get_coordination_status(self, coordination_id: str) -> Optional[Dict[str, Any]]:
+        """Get status of a coordination"""
+        return self.coordination_state.get(coordination_id)
+
+    def list_active_coordinations(self) -> List[str]:
+        """List all active coordinations for this agent"""
+        active = []
+        for coord_id, coord_data in self.coordination_state.items():
+            if coord_data.get('response') != 'completed':
+                active.append(coord_id)
+        return active
     
     def _load_existing_data(self):
         """Load existing AtomSpace data from communication files"""
