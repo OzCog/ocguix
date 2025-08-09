@@ -81,14 +81,14 @@ export default function Header() {
         </div>
 
         {/* theme controller is copied from https://daisyui.com/components/theme-controller/ */}
-        <div className="tooltip tooltip-bottom" data-tip="Themes">
+        <div className="tooltip tooltip-bottom" data-tip="OpenCog Agent Themes">
           <div className="dropdown dropdown-end dropdown-bottom">
             <div tabIndex={0} role="button" className="btn m-1">
               <MoonIcon className="w-5 h-5" />
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content bg-base-300 rounded-box z-[1] w-52 p-2 shadow-2xl h-80 overflow-y-auto"
+              className="dropdown-content bg-base-300 rounded-box z-[1] w-56 p-2 shadow-2xl h-80 overflow-y-auto"
             >
               <li>
                 <button
