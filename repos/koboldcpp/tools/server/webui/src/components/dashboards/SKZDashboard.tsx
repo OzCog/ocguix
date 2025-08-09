@@ -9,8 +9,17 @@ import {
   PrinterIcon,
   ChartPieIcon,
   ExclamationTriangleIcon,
+  WifiIcon,
+  SignalIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { AgentStatus, skzApi, mockData } from '../../utils/skz-api';
+import {
+  AgentStatus,
+  skzApi,
+  mockData,
+  WebSocketMessage,
+  WebSocketConnectionStatus,
+} from '../../utils/skz-api';
 import { classNames } from '../../utils/misc';
 
 interface DashboardCardProps {
@@ -18,6 +27,7 @@ interface DashboardCardProps {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
   route: string;
+  connectionStatus?: WebSocketConnectionStatus | null;
 }
 
 function DashboardCard({
@@ -25,6 +35,7 @@ function DashboardCard({
   icon: Icon,
   description,
   route,
+  connectionStatus,
 }: DashboardCardProps) {
   const statusColors = {
     active: 'text-success',
@@ -38,6 +49,48 @@ function DashboardCard({
     idle: 'bg-warning/10 border-warning/20',
     error: 'bg-error/10 border-error/20',
     offline: 'bg-base-300 border-base-300',
+  };
+
+  const getConnectionIcon = () => {
+    if (!connectionStatus) {
+      return (
+        <ExclamationCircleIcon className="w-4 h-4 text-base-content opacity-50" />
+      );
+    }
+
+    switch (connectionStatus.status) {
+      case 'connected':
+        return <SignalIcon className="w-4 h-4 text-success" />;
+      case 'connecting':
+      case 'reconnecting':
+        return <WifiIcon className="w-4 h-4 text-warning animate-pulse" />;
+      case 'error':
+      case 'disconnected':
+        return <ExclamationCircleIcon className="w-4 h-4 text-error" />;
+      default:
+        return (
+          <ExclamationCircleIcon className="w-4 h-4 text-base-content opacity-50" />
+        );
+    }
+  };
+
+  const getConnectionStatusText = () => {
+    if (!connectionStatus) return 'No connection data';
+
+    switch (connectionStatus.status) {
+      case 'connected':
+        return 'Real-time updates active';
+      case 'connecting':
+        return 'Connecting...';
+      case 'reconnecting':
+        return `Reconnecting... (attempt ${connectionStatus.reconnectAttempts})`;
+      case 'error':
+        return `Connection error${connectionStatus.error ? `: ${connectionStatus.error}` : ''}`;
+      case 'disconnected':
+        return 'Disconnected';
+      default:
+        return 'Unknown status';
+    }
   };
 
   return (
@@ -61,19 +114,25 @@ function DashboardCard({
               </div>
             </div>
             <div className="flex flex-col items-end">
-              <div
-                className={classNames({
-                  'badge badge-sm font-medium': true,
-                  [statusColors[agent.status]]: true,
-                })}
-              >
-                {agent.status}
+              <div className="flex items-center gap-2 mb-1">
+                {getConnectionIcon()}
+                <div
+                  className={classNames({
+                    'badge badge-sm font-medium': true,
+                    [statusColors[agent.status]]: true,
+                  })}
+                >
+                  {agent.status}
+                </div>
               </div>
               {agent.lastUpdate && (
                 <span className="text-xs text-base-content/50 mt-1">
                   {new Date(agent.lastUpdate).toLocaleTimeString()}
                 </span>
               )}
+              <span className="text-xs text-base-content/50 mt-1">
+                {getConnectionStatusText()}
+              </span>
             </div>
           </div>
 
@@ -98,6 +157,9 @@ export default function SKZDashboard() {
   const [agents, setAgents] = useState<AgentStatus[]>(mockData.agentStatus);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatuses, setConnectionStatuses] = useState<
+    WebSocketConnectionStatus[]
+  >([]);
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -123,10 +185,32 @@ export default function SKZDashboard() {
 
     fetchAgents();
 
-    // Set up periodic refresh
-    const interval = setInterval(fetchAgents, 30000); // Refresh every 30 seconds
+    // Set up WebSocket for real-time agent status updates
+    const handleWebSocketMessage = (message: WebSocketMessage) => {
+      console.log('Received agent status update:', message);
+      if (message.type === 'agent_status_update' && message.data) {
+        const updatedAgents = message.data as AgentStatus[];
+        setAgents(updatedAgents);
+        setError(null); // Clear error when receiving real-time data
+      }
+    };
 
-    return () => clearInterval(interval);
+    // Connect to global agent status WebSocket
+    skzApi.connectWebSocket('global-status', handleWebSocketMessage);
+
+    // Update connection statuses periodically
+    const updateConnectionStatuses = () => {
+      const statuses = skzApi.getAllConnectionStatuses();
+      setConnectionStatuses(statuses);
+    };
+
+    updateConnectionStatuses();
+    const statusInterval = setInterval(updateConnectionStatuses, 2000); // Update every 2 seconds
+
+    return () => {
+      skzApi.disconnectWebSocket('global-status');
+      clearInterval(statusInterval);
+    };
   }, []);
 
   const agentConfigs = [
@@ -260,6 +344,10 @@ export default function SKZDashboard() {
             lastUpdate: new Date().toISOString(),
           };
 
+          const connectionStatus = connectionStatuses.find(
+            (cs) => cs.agentName === config.id
+          );
+
           return (
             <DashboardCard
               key={config.id}
@@ -267,6 +355,7 @@ export default function SKZDashboard() {
               icon={config.icon}
               description={config.description}
               route={config.route}
+              connectionStatus={connectionStatus}
             />
           );
         })}

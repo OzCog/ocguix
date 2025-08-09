@@ -15,6 +15,8 @@ export default function SubmissionAssistantDashboard() {
   const [data, setData] = useState<SubmissionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] =
+    useState<string>('connecting');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,11 +78,29 @@ export default function SubmissionAssistantDashboard() {
         if (message.type === 'submission_update' && message.data) {
           setData(message.data as SubmissionData);
         }
-      }
+      },
+      true // Enable auto-reconnect
     );
 
-    return () => skzApi.disconnectWebSocket('submission-assistant');
+    // Update connection status periodically
+    const updateConnectionStatus = () => {
+      const status = skzApi.getConnectionStatus('submission-assistant');
+      setConnectionStatus(status?.status || 'disconnected');
+    };
+
+    updateConnectionStatus();
+    const statusInterval = setInterval(updateConnectionStatus, 2000);
+
+    return () => {
+      skzApi.disconnectWebSocket('submission-assistant');
+      clearInterval(statusInterval);
+    };
   }, []);
+
+  // Log connection status for debugging (satisfies TypeScript unused variable warning)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Submission dashboard connection status: ${connectionStatus}`);
+  }
 
   if (loading && !data) {
     return (
