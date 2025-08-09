@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import StorageUtils from '../utils/storage';
 import { useAppContext } from '../utils/app.context';
 import { classNames } from '../utils/misc';
@@ -8,11 +9,15 @@ import {
   Cog8ToothIcon,
   MoonIcon,
   Bars3Icon,
+  ChartPieIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Header() {
   const [selectedTheme, setSelectedTheme] = useState(StorageUtils.getTheme());
   const { setShowSettings } = useAppContext();
+  const location = useLocation();
+
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
   const setTheme = (theme: string) => {
     StorageUtils.setTheme(theme);
@@ -34,10 +39,36 @@ export default function Header() {
         <Bars3Icon className="h-5 w-5" />
       </label>
 
-      <div className="grow text-2xl font-bold ml-2">llama.cpp</div>
+      <div className="grow text-2xl font-bold ml-2">
+        {isDashboard ? (
+          <Link
+            to="/dashboard"
+            className="hover:text-primary transition-colors"
+          >
+            SKZ Agents Dashboard
+          </Link>
+        ) : (
+          <Link to="/" className="hover:text-primary transition-colors">
+            llama.cpp
+          </Link>
+        )}
+      </div>
 
       {/* action buttons (top right) */}
       <div className="flex items-center">
+        {/* Dashboard toggle */}
+        <div
+          className="tooltip tooltip-bottom"
+          data-tip={isDashboard ? 'Chat Interface' : 'Agent Dashboard'}
+        >
+          <Link
+            to={isDashboard ? '/' : '/dashboard'}
+            className="btn mr-2"
+            aria-label={isDashboard ? 'Switch to Chat' : 'Open Dashboard'}
+          >
+            <ChartPieIcon className="w-5 h-5" />
+          </Link>
+        </div>
         <div
           className="tooltip tooltip-bottom"
           data-tip="Settings"
