@@ -20,12 +20,12 @@
 (define active-agents (make-atomic-box '()))
 (define message-queue (make-atomic-box '()))
 
-;; Define distributed agent network nodes
+;; Define distributed agent network nodes (Enhanced with SKZ integration)
 (define distributed-agent-nodes
   '((cognitive-grammar-integration
      (type . "grammar-processor")
      (endpoint . "local://cognitive-grammar-integration-agent.scm")
-     (capabilities . ("pattern-routing" "bridge-coordination" "grammar-parsing"))
+     (capabilities . ("pattern-routing" "bridge-coordination" "grammar-parsing" "skz-coordination"))
      (status . "active")
      (load . 0)
      (priority . "high"))
@@ -60,9 +60,66 @@
      (capabilities . ("health-monitoring" "improvement-analysis" "recursive-optimization"))
      (status . "active")
      (load . 0)
-     (priority . "low"))))
+     (priority . "low"))
+    
+    ;; SKZ Autonomous Agents Integration
+    (skz-research-discovery-agent
+     (type . "autonomous-research-agent")
+     (endpoint . "local://skz-integration/skz-research-discovery-agent.scm")
+     (capabilities . ("inci-database-mining" "patent-analysis" "trend-identification" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "high"))
+    
+    (skz-submission-assistant-agent
+     (type . "autonomous-quality-agent")
+     (endpoint . "local://skz-integration/skz-submission-assistant-agent.scm")
+     (capabilities . ("quality-assessment" "safety-compliance" "statistical-review" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "high"))
+    
+    (skz-editorial-orchestration-agent
+     (type . "autonomous-coordination-agent")
+     (endpoint . "local://skz-integration/skz-editorial-orchestration-agent.scm")
+     (capabilities . ("workflow-coordination" "decision-making" "conflict-resolution" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "critical"))
+    
+    (skz-review-coordination-agent
+     (type . "autonomous-review-agent")
+     (endpoint . "local://skz-integration/skz-review-coordination-agent.scm")
+     (capabilities . ("reviewer-matching" "workload-management" "quality-monitoring" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "high"))
+    
+    (skz-content-quality-agent
+     (type . "autonomous-validation-agent")
+     (endpoint . "local://skz-integration/skz-content-quality-agent.scm")
+     (capabilities . ("scientific-validation" "safety-assessment" "standards-enforcement" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "critical"))
+    
+    (skz-publishing-production-agent
+     (type . "autonomous-production-agent")
+     (endpoint . "local://skz-integration/skz-publishing-production-agent.scm")
+     (capabilities . ("content-formatting" "visual-generation" "multi-channel-distribution" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "medium"))
+    
+    (skz-analytics-monitoring-agent
+     (type . "autonomous-analytics-agent")
+     (endpoint . "local://skz-integration/skz-analytics-monitoring-agent.scm")
+     (capabilities . ("performance-analytics" "trend-forecasting" "strategic-insights" "atomspace-integration"))
+     (status . "active")
+     (load . 0)
+     (priority . "medium"))))
 
-;; Message types for inter-agent communication
+;; Message types for inter-agent communication (Enhanced with SKZ messages)
 (define message-types
   '((query-message
      (structure . "(from-agent to-agent query-type payload)")
@@ -87,7 +144,53 @@
     (coordination-message
      (structure . "(coordinator agent-list action parameters)")
      (example . "(coordinator (registry-discovery profile-extraction) coordinate-pipeline ())")
-     (routing . "coordinator"))))
+     (routing . "coordinator"))
+    
+    ;; SKZ Autonomous Agent Message Types
+    (skz-research-query
+     (structure . "(from-agent skz-research-agent query-type research-params)")
+     (example . "(cognitive-grammar skz-research-agent inci-lookup (ingredient . \"retinol\"))")
+     (routing . "direct"))
+    
+    (skz-submission-assessment
+     (structure . "(from-agent skz-submission-agent assessment-type submission-data)")
+     (example . "(skz-editorial-agent skz-submission-agent quality-check (submission-id . \"ms-001\"))")
+     (routing . "direct"))
+    
+    (skz-workflow-coordination
+     (structure . "(from-agent skz-editorial-agent workflow-action coordination-params)")
+     (example . "(skz-submission-agent skz-editorial-agent handoff-review (workflow-id . \"wf-001\"))")
+     (routing . "coordinator"))
+    
+    (skz-review-assignment
+     (structure . "(skz-review-agent reviewer-pool assignment-params)")
+     (example . "(skz-review-agent expert-reviewers match-expertise (topic . \"toxicology\"))")
+     (routing . "direct"))
+    
+    (skz-quality-validation
+     (structure . "(from-agent skz-quality-agent validation-type validation-criteria)")
+     (example . "(skz-submission-agent skz-quality-agent scientific-validation (standards . \"iso-14180\"))")
+     (routing . "direct"))
+    
+    (skz-publishing-production
+     (structure . "(from-agent skz-publishing-agent production-type output-specs)")
+     (example . "(skz-quality-agent skz-publishing-agent format-manuscript (formats . \"pdf html xml\"))")
+     (routing . "direct"))
+    
+    (skz-analytics-report
+     (structure . "(from-agent skz-analytics-agent report-type analytics-params)")
+     (example . "(skz-editorial-agent skz-analytics-agent performance-metrics (timeframe . \"quarterly\"))")
+     (routing . "direct"))
+    
+    (skz-coordination-handoff
+     (structure . "(from-skz-agent to-skz-agent handoff-type data-payload)")
+     (example . "(skz-research-agent skz-submission-agent data-handoff research-findings.json)")
+     (routing . "coordinator"))
+    
+    (skz-feedback-message
+     (structure . "(from-skz-agent to-skz-agent feedback-type improvement-data)")
+     (example . "(skz-quality-agent skz-submission-agent improvement-feedback quality-suggestions.json)")
+     (routing . "direct"))))
 
 ;; Network coordinator functions
 (define (register-agent agent-id agent-info)

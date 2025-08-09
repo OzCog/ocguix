@@ -13,7 +13,7 @@
   (ice-9 ports)
   (ice-9 textual-ports))
 
-;; Define cognitive grammar network nodes
+;; Define cognitive grammar network nodes (Enhanced with SKZ agent integration)
 (define cognitive-network-nodes
   '((language-model-server 
      (type . "inference-engine")
@@ -44,9 +44,66 @@
      (type . "resource-discovery")
      (capabilities . ("package-enumeration" "metadata-extraction" "registry-scanning"))
      (integration . "scheme-agents")
-     (role . "resource-aggregation"))))
+     (role . "resource-aggregation"))
+    
+    ;; SKZ Autonomous Agent Integration Nodes
+    (skz-research-discovery-agent
+     (type . "autonomous-research-agent")
+     (endpoint . "local://skz-integration/skz-research-discovery-agent.scm")
+     (capabilities . ("inci-database-mining" "patent-analysis" "trend-identification"))
+     (integration . "skz-atomspace-bridge")
+     (role . "research-discovery")
+     (priority . "high"))
+    
+    (skz-submission-assistant-agent
+     (type . "autonomous-quality-agent")
+     (endpoint . "local://skz-integration/skz-submission-assistant-agent.scm")
+     (capabilities . ("quality-assessment" "safety-compliance" "statistical-review"))
+     (integration . "skz-atomspace-bridge")
+     (role . "quality-assurance")
+     (priority . "high"))
+    
+    (skz-editorial-orchestration-agent
+     (type . "autonomous-coordination-agent")
+     (endpoint . "local://skz-integration/skz-editorial-orchestration-agent.scm")
+     (capabilities . ("workflow-coordination" "decision-making" "conflict-resolution"))
+     (integration . "skz-atomspace-bridge")
+     (role . "editorial-coordination")
+     (priority . "critical"))
+    
+    (skz-review-coordination-agent
+     (type . "autonomous-review-agent")
+     (endpoint . "local://skz-integration/skz-review-coordination-agent.scm")
+     (capabilities . ("reviewer-matching" "workload-management" "quality-monitoring"))
+     (integration . "skz-atomspace-bridge")
+     (role . "review-coordination")
+     (priority . "high"))
+    
+    (skz-content-quality-agent
+     (type . "autonomous-validation-agent")
+     (endpoint . "local://skz-integration/skz-content-quality-agent.scm")
+     (capabilities . ("scientific-validation" "safety-assessment" "standards-enforcement"))
+     (integration . "skz-atomspace-bridge")
+     (role . "content-validation")
+     (priority . "critical"))
+    
+    (skz-publishing-production-agent
+     (type . "autonomous-production-agent")
+     (endpoint . "local://skz-integration/skz-publishing-production-agent.scm")
+     (capabilities . ("content-formatting" "visual-generation" "multi-channel-distribution"))
+     (integration . "skz-atomspace-bridge")
+     (role . "publishing-production")
+     (priority . "medium"))
+    
+    (skz-analytics-monitoring-agent
+     (type . "autonomous-analytics-agent")
+     (endpoint . "local://skz-integration/skz-analytics-monitoring-agent.scm")
+     (capabilities . ("performance-analytics" "trend-forecasting" "strategic-insights"))
+     (integration . "skz-atomspace-bridge")
+     (role . "analytics-monitoring")
+     (priority . "medium"))))
 
-;; Define cognitive grammar patterns
+;; Define cognitive grammar patterns (Enhanced with SKZ agent patterns)
 (define cognitive-grammar-patterns
   '((query-pattern
      (structure . "(subject (predicate object))")
@@ -71,7 +128,54 @@
     (discovery-pattern
      (structure . "(registry (contains package-metadata))")
      (example . "(github-opencog (contains atomspace-info))")
-     (routing . "registry-discovery"))))
+     (routing . "registry-discovery"))
+    
+    ;; SKZ Autonomous Agent Cognitive Grammar Patterns
+    (research-discovery-pattern
+     (structure . "(agent (discovers (research-type parameters)))")
+     (example . "(skz-research-agent (discovers (inci-data toxicology-profile)))")
+     (routing . "skz-research-discovery-agent"))
+    
+    (submission-processing-pattern
+     (structure . "(agent (processes (submission-type quality-metrics)))")
+     (example . "(skz-submission-agent (processes (manuscript safety-compliance)))")
+     (routing . "skz-submission-assistant-agent"))
+    
+    (workflow-orchestration-pattern
+     (structure . "(agent (orchestrates (workflow-type coordination-params)))")
+     (example . "(skz-editorial-agent (orchestrates (review-workflow decision-support)))")
+     (routing . "skz-editorial-orchestration-agent"))
+    
+    (review-coordination-pattern
+     (structure . "(agent (coordinates (review-type matching-params)))")
+     (example . "(skz-review-agent (coordinates (peer-review expertise-matching)))")
+     (routing . "skz-review-coordination-agent"))
+    
+    (quality-validation-pattern
+     (structure . "(agent (validates (content-type validation-criteria)))")
+     (example . "(skz-quality-agent (validates (scientific-content standards-compliance)))")
+     (routing . "skz-content-quality-agent"))
+    
+    (publishing-production-pattern
+     (structure . "(agent (produces (content-type output-formats)))")
+     (example . "(skz-publishing-agent (produces (final-manuscript multi-format)))")
+     (routing . "skz-publishing-production-agent"))
+    
+    (analytics-monitoring-pattern
+     (structure . "(agent (analyzes (data-type analytics-params)))")
+     (example . "(skz-analytics-agent (analyzes (workflow-performance trend-analysis)))")
+     (routing . "skz-analytics-monitoring-agent"))
+    
+    ;; Inter-agent coordination patterns for SKZ integration
+    (skz-coordination-pattern
+     (structure . "(skz-agent (coordinates-with (other-agent coordination-type)))")
+     (example . "(skz-research-agent (coordinates-with (skz-submission-agent data-handoff)))")
+     (routing . "skz-editorial-orchestration-agent"))
+    
+    (skz-feedback-pattern
+     (structure . "(skz-agent (provides-feedback (target-agent feedback-type)))")
+     (example . "(skz-quality-agent (provides-feedback (skz-submission-agent improvement-suggestions)))")
+     (routing . "distributed-network-coordinator"))))
 
 ;; Function to generate cognitive network topology
 (define (generate-network-topology)
@@ -252,6 +356,25 @@
   (format #t "       (process-with-coordination 'package-manager input))~%")
   (format #t "      ('discovery-pattern~%")
   (format #t "       (process-with-coordination 'registry-discovery input))~%")
+  ;; SKZ Agent Pattern Processing
+  (format #t "      ('research-discovery-pattern~%")
+  (format #t "       (process-with-coordination 'skz-research-agent input))~%")
+  (format #t "      ('submission-processing-pattern~%")
+  (format #t "       (process-with-coordination 'skz-submission-agent input))~%")
+  (format #t "      ('workflow-orchestration-pattern~%")
+  (format #t "       (process-with-coordination 'skz-editorial-agent input))~%")
+  (format #t "      ('review-coordination-pattern~%")
+  (format #t "       (process-with-coordination 'skz-review-agent input))~%")
+  (format #t "      ('quality-validation-pattern~%")
+  (format #t "       (process-with-coordination 'skz-quality-agent input))~%")
+  (format #t "      ('publishing-production-pattern~%")
+  (format #t "       (process-with-coordination 'skz-publishing-agent input))~%")
+  (format #t "      ('analytics-monitoring-pattern~%")
+  (format #t "       (process-with-coordination 'skz-analytics-agent input))~%")
+  (format #t "      ('skz-coordination-pattern~%")
+  (format #t "       (process-skz-coordination input))~%")
+  (format #t "      ('skz-feedback-pattern~%")
+  (format #t "       (process-skz-feedback input))~%")
   (format #t "      ('network-pattern~%")
   (format #t "       (process-network-operation input))~%")
   (format #t "      (_~%")
@@ -265,6 +388,35 @@
   (format #t "    ((string-contains input \"concept\") 'knowledge-pattern)~%")
   (format #t "    ((string-contains input \"package\") 'dependency-pattern)~%")
   (format #t "    ((string-contains input \"registry\") 'discovery-pattern)~%")
+  ;; SKZ agent pattern detection
+  (format #t "    ((or (string-contains input \"research\")~%")
+  (format #t "         (string-contains input \"discover\")~%")
+  (format #t "         (string-contains input \"inci\")~%")
+  (format #t "         (string-contains input \"patent\")) 'research-discovery-pattern)~%")
+  (format #t "    ((or (string-contains input \"submission\")~%")
+  (format #t "         (string-contains input \"quality\")~%")
+  (format #t "         (string-contains input \"safety\")~%")
+  (format #t "         (string-contains input \"compliance\")) 'submission-processing-pattern)~%")
+  (format #t "    ((or (string-contains input \"workflow\")~%")
+  (format #t "         (string-contains input \"orchestrat\")~%")
+  (format #t "         (string-contains input \"editorial\")~%")
+  (format #t "         (string-contains input \"decision\")) 'workflow-orchestration-pattern)~%")
+  (format #t "    ((or (string-contains input \"review\")~%")
+  (format #t "         (string-contains input \"coordinate\")~%")
+  (format #t "         (string-contains input \"reviewer\")~%")
+  (format #t "         (string-contains input \"matching\")) 'review-coordination-pattern)~%")
+  (format #t "    ((or (string-contains input \"validate\")~%")
+  (format #t "         (string-contains input \"scientific\")~%")
+  (format #t "         (string-contains input \"standard\")) 'quality-validation-pattern)~%")
+  (format #t "    ((or (string-contains input \"publish\")~%")
+  (format #t "         (string-contains input \"format\")~%")
+  (format #t "         (string-contains input \"production\")) 'publishing-production-pattern)~%")
+  (format #t "    ((or (string-contains input \"analytics\")~%")
+  (format #t "         (string-contains input \"monitor\")~%")
+  (format #t "         (string-contains input \"performance\")) 'analytics-monitoring-pattern)~%")
+  (format #t "    ((or (string-contains input \"skz-coordin\")~%")
+  (format #t "         (string-contains input \"agent-coordin\")) 'skz-coordination-pattern)~%")
+  (format #t "    ((string-contains input \"feedback\") 'skz-feedback-pattern)~%")
   (format #t "    ((or (string-contains input \"network\")~%")
   (format #t "         (string-contains input \"coordinate\")~%")
   (format #t "         (string-contains input \"distribute\")) 'network-pattern)~%")
@@ -284,6 +436,21 @@
   (format #t "     (coordinate-with-package-manager input))~%")
   (format #t "    ('registry-discovery~%")
   (format #t "     (coordinate-with-registry-discovery input))~%")
+  ;; SKZ Agent Coordination
+  (format #t "    ('skz-research-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-research-agent input))~%")
+  (format #t "    ('skz-submission-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-submission-agent input))~%")
+  (format #t "    ('skz-editorial-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-editorial-agent input))~%")
+  (format #t "    ('skz-review-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-review-agent input))~%")
+  (format #t "    ('skz-quality-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-quality-agent input))~%")
+  (format #t "    ('skz-publishing-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-publishing-agent input))~%")
+  (format #t "    ('skz-analytics-agent~%")
+  (format #t "     (coordinate-with-skz-agent 'skz-analytics-agent input))~%")
   (format #t "    (_~%")
   (format #t "     (format #f \"Unknown target system: ~~a\" target-system))))~%~%")
   
@@ -306,6 +473,75 @@
   (format #t "  (send-message-to-network 'registry-discovery 'query input)~%")
   (format #t "  (format #t \"📤 Sent discovery request to registry agent~%\")~%")
   (format #t "  (list 'discovery-initiated input))~%~%")
+  
+  ;; SKZ Agent Coordination Functions
+  (format #t ";; SKZ Agent Coordination Functions~%")
+  (format #t "(define (coordinate-with-skz-agent agent-type input)~%")
+  (format #t "  \"Generic coordination with SKZ autonomous agents\"~%")
+  (format #t "  (format #t \"🤖 Coordinating with SKZ ~a agent for: ~a~%\" agent-type input)~%")
+  (format #t "  (let ((agent-endpoint (get-skz-agent-endpoint agent-type)))~%")
+  (format #t "    ;; Bridge through AtomSpace~%")
+  (format #t "    (bridge-to-skz-atomspace agent-type input)~%")
+  (format #t "    ;; Send coordination message~%")
+  (format #t "    (send-message-to-network agent-endpoint 'cognitive-task input)~%")
+  (format #t "    (format #t \"✅ SKZ coordination initiated with ~a~%\" agent-type)~%")
+  (format #t "    (list 'skz-coordination-success agent-type input)))~%~%")
+  
+  (format #t "(define (get-skz-agent-endpoint agent-type)~%")
+  (format #t "  \"Get the network endpoint for an SKZ agent\"~%")
+  (format #t "  (match agent-type~%")
+  (format #t "    ('skz-research-agent 'skz-research-discovery-agent)~%")
+  (format #t "    ('skz-submission-agent 'skz-submission-assistant-agent)~%")
+  (format #t "    ('skz-editorial-agent 'skz-editorial-orchestration-agent)~%")
+  (format #t "    ('skz-review-agent 'skz-review-coordination-agent)~%")
+  (format #t "    ('skz-quality-agent 'skz-content-quality-agent)~%")
+  (format #t "    ('skz-publishing-agent 'skz-publishing-production-agent)~%")
+  (format #t "    ('skz-analytics-agent 'skz-analytics-monitoring-agent)~%")
+  (format #t "    (_ 'unknown-skz-agent)))~%~%")
+  
+  (format #t "(define (bridge-to-skz-atomspace agent-type input)~%")
+  (format #t "  \"Bridge cognitive grammar input to SKZ AtomSpace structures\"~%")
+  (format #t "  (format #t \"🧠 Bridging to AtomSpace: ~a -> ~a~%\" agent-type input)~%")
+  (format #t "  ;; Would integrate with skz-integration/bridges/skz-atomspace-bridge.scm~%")
+  (format #t "  (match agent-type~%")
+  (format #t "    ('skz-research-agent~%")
+  (format #t "     (create-research-task-node input))~%")
+  (format #t "    ('skz-submission-agent~%")
+  (format #t "     (create-submission-task-node input))~%")
+  (format #t "    ('skz-editorial-agent~%")
+  (format #t "     (create-workflow-task-node input))~%")
+  (format #t "    ('skz-review-agent~%")
+  (format #t "     (create-review-task-node input))~%")
+  (format #t "    ('skz-quality-agent~%")
+  (format #t "     (create-quality-task-node input))~%")
+  (format #t "    ('skz-publishing-agent~%")
+  (format #t "     (create-publishing-task-node input))~%")
+  (format #t "    ('skz-analytics-agent~%")
+  (format #t "     (create-analytics-task-node input))~%")
+  (format #t "    (_ 'unknown-task-node)))~%~%")
+  
+  (format #t "(define (process-skz-coordination input)~%")
+  (format #t "  \"Process coordination between SKZ agents\"~%")
+  (format #t "  (format #t \"🤝 Processing SKZ agent coordination: ~a~%\" input)~%")
+  (format #t "  (let ((coordination-type (detect-coordination-type input)))~%")
+  (format #t "    (match coordination-type~%")
+  (format #t "      ('workflow-handoff~%")
+  (format #t "       (coordinate-workflow-handoff input))~%")
+  (format #t "      ('data-sharing~%")
+  (format #t "       (coordinate-data-sharing input))~%")
+  (format #t "      ('decision-consensus~%")
+  (format #t "       (coordinate-decision-consensus input))~%")
+  (format #t "      (_ (format #f \"Unknown coordination type for: ~a\" input)))))~%~%")
+  
+  (format #t "(define (process-skz-feedback input)~%")
+  (format #t "  \"Process feedback between SKZ agents\"~%")
+  (format #t "  (format #t \"📋 Processing SKZ agent feedback: ~a~%\" input)~%")
+  (format #t "  (let ((feedback-type (detect-feedback-type input)))~%")
+  (format #t "    ;; Route feedback to appropriate agents~%")
+  (format #t "    (send-message-to-network 'meta-cognitive-feedback 'feedback~%")
+  (format #t "                            (list 'skz-feedback feedback-type input))~%")
+  (format #t "    (format #t \"✅ SKZ feedback processed and routed~%\")~%")
+  (format #t "    (list 'feedback-processed feedback-type input)))~%~%")
   
   (format #t "(define (process-network-operation input)~%")
   (format #t "  \"Process network-level operations\"~%")
