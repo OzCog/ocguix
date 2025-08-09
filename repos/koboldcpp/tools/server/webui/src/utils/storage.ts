@@ -204,7 +204,7 @@ const StorageUtils = {
     localStorage.setItem('config', JSON.stringify(config));
   },
   getTheme(): string {
-    return localStorage.getItem('theme') || 'auto';
+    return localStorage.getItem('theme') || 'opencog-neural';
   },
   setTheme(theme: string) {
     if (theme === 'auto') {

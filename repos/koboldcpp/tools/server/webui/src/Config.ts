@@ -89,8 +89,8 @@ export const CONFIG_NUMERIC_KEYS = Object.entries(CONFIG_DEFAULT)
   .filter((e) => isNumeric(e[1]))
   .map((e) => e[0]);
 // list of themes supported by daisyui
-export const THEMES = ['light', 'dark']
-  // make sure light & dark are always at the beginning
+export const THEMES = ['opencog-neural', 'opencog-quantum', 'light', 'dark']
+  // make sure OpenCog themes, light & dark are always at the beginning
   .concat(
     Object.keys(daisyuiThemes).filter((t) => t !== 'light' && t !== 'dark')
   );

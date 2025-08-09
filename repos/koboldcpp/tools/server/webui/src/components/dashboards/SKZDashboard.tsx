@@ -97,7 +97,7 @@ function DashboardCard({
     <Link to={route} className="block">
       <div
         className={classNames({
-          'card bg-base-100 shadow-md hover:shadow-lg transition-all duration-200 border-2':
+          'card agent-card bg-base-100 shadow-md hover:shadow-lg transition-all duration-200 border-2':
             true,
           [statusBg[agent.status]]: true,
         })}
