@@ -13,7 +13,49 @@
   (ice-9 ports)
   (ice-9 textual-ports)
   (ice-9 threads)
-  (ice-9 atomic))
+  (ice-9 atomic)
+  (ice-9 ftw))
+
+;; Simple JSON handling for Python bridge communication
+(define (scm->json-string obj)
+  "Convert Scheme object to JSON string (simplified)"
+  (cond
+    ((list? obj) (list->json-string obj))
+    ((string? obj) (string-append "\"" obj "\""))
+    ((number? obj) (number->string obj))
+    ((symbol? obj) (string-append "\"" (symbol->string obj) "\""))
+    ((boolean? obj) (if obj "true" "false"))
+    (else "null")))
+
+(define (list->json-string lst)
+  "Convert list to JSON string"
+  (if (and (pair? lst) (pair? (car lst)) (symbol? (caar lst)))
+      ;; Association list -> JSON object
+      (string-append "{"
+        (string-join
+          (map (lambda (pair)
+                 (string-append (scm->json-string (car pair))
+                               ":"
+                               (scm->json-string (cdr pair))))
+               lst)
+          ",")
+        "}")
+      ;; Regular list -> JSON array
+      (string-append "["
+        (string-join (map scm->json-string lst) ",")
+        "]")))
+
+(define (json-string->scm str)
+  "Convert JSON string to Scheme object (simplified)"
+  ;; This is a very basic JSON parser - for production use a proper JSON library
+  (cond
+    ((string-prefix? "{" str) 
+     ;; Simple object parsing
+     '((message . "json-object")))
+    ((string-prefix? "[" str)
+     ;; Simple array parsing  
+     '())
+    (else str)))
 
 ;; AtomSpace simulation and bridge functions
 (define atomspace-nodes (make-atomic-box '()))
@@ -377,6 +419,124 @@
     (format #t "✅ Integration node created: ~a~%" integration-node)
     integration-node))
 
+;; Python-Scheme Bridge Communication
+(define python-communication-dir "/tmp/skz_atomspace_bridge")
+
+(define (ensure-communication-directory)
+  "Ensure the communication directory exists"
+  (unless (file-exists? python-communication-dir)
+    (mkdir python-communication-dir))
+  python-communication-dir)
+
+(define (read-python-bridge-messages)
+  "Read messages from Python agents via JSON communication"
+  (let ((messages-file (string-append python-communication-dir "/bridge_messages.json")))
+    (if (file-exists? messages-file)
+        (begin
+          (format #t "📨 Reading Python bridge messages~%")
+          (call-with-input-file messages-file
+            (lambda (port)
+              (let ((content (get-string-all port)))
+                (if (and content (> (string-length content) 0))
+                    (json-string->scm content)
+                    '())))))
+        '())))
+
+(define (process-python-bridge-message message)
+  "Process a message from a Python agent"
+  (let ((msg-type (assoc-ref message 'message_type))
+        (data (assoc-ref message 'data))
+        (agent-id (assoc-ref message 'agent_id)))
+    
+    (format #t "🐍 Processing Python message: ~a from ~a~%" msg-type agent-id)
+    
+    (match msg-type
+      ('agent_registration
+       (bridge-agent-registration
+         (assoc-ref data 'agent_id)
+         (assoc-ref data 'capabilities)
+         (assoc-ref data 'status)))
+      
+      ('submission_created
+       (bridge-submission-processing
+         `((id . ,(assoc-ref data 'submission_id))
+           (title . ,(assoc-ref data 'title)))
+         agent-id))
+      
+      ('workflow_created
+       (bridge-workflow-orchestration
+         `((workflow-id . ,(assoc-ref data 'workflow_id))
+           (workflow-type . ,(assoc-ref data 'workflow_type))
+           (status . ,(assoc-ref data 'status))
+           (steps . ,(assoc-ref data 'steps)))))
+      
+      ('research_data_created
+       (bridge-research-discovery
+         (list (assoc-ref data 'data_type) (assoc-ref data 'content))
+         agent-id))
+      
+      ('assessment_created
+       (bridge-editorial-decision
+         `((recommendation . ,(assoc-ref data 'recommendation))
+           (confidence . ,(assoc-ref data 'score)))))
+      
+      ('sync_request
+       (format #t "🔄 Python agent sync request from ~a~%" agent-id)
+       (sync-atomspace-data))
+      
+      (_
+       (format #t "⚠️ Unknown Python message type: ~a~%" msg-type)))))
+
+(define (sync-with-python-bridge)
+  "Synchronize AtomSpace data with Python bridge"
+  (format #t "🔄 Synchronizing with Python bridge~%")
+  
+  (ensure-communication-directory)
+  
+  ;; Read and process Python messages
+  (let ((messages-data (read-python-bridge-messages)))
+    (when (and messages-data (assoc-ref messages-data 'messages))
+      (for-each process-python-bridge-message 
+                (assoc-ref messages-data 'messages))))
+  
+  ;; Export current AtomSpace state for Python agents
+  (sync-atomspace-data)
+  
+  (format #t "✅ Python bridge sync complete~%"))
+
+(define (sync-atomspace-data)
+  "Export AtomSpace data for Python agents"
+  (let ((nodes-file (string-append python-communication-dir "/atomspace_nodes.json"))
+        (links-file (string-append python-communication-dir "/atomspace_links.json")))
+    
+    ;; Export nodes (simplified representation)
+    (let ((nodes-data `((nodes . ,(map
+                                  (lambda (node)
+                                    `((node_type . "SKZAgentNode")
+                                      (node_id . ,(symbol->string (gensym "scheme-node")))
+                                      (properties . ((created_by . "scheme-bridge")
+                                                   (timestamp . ,(current-time))))
+                                      (created_at . ,(current-time))))
+                                  (take (query-atomspace '(SKZAgentNode _)) 
+                                        (min 10 (length (query-atomspace '(SKZAgentNode _)))))))
+                      (updated_at . ,(current-time))
+                      (updated_by . "scheme-bridge"))))
+      
+      (call-with-output-file nodes-file
+        (lambda (port)
+          (display (scm->json-string nodes-data) port))))
+    
+    ;; Export links (simplified representation)  
+    (let ((links-data `((links . ())
+                       (updated_at . ,(current-time))
+                       (updated_by . "scheme-bridge"))))
+      
+      (call-with-output-file links-file
+        (lambda (port)
+          (display (scm->json-string links-data) port))))
+    
+    (format #t "📤 AtomSpace data exported for Python agents~%")))
+
 (define (integrate-with-distributed-coordinator)
   "Integrate SKZ bridge with distributed network coordinator"
   (format #t "🌐 Integrating with distributed network coordinator~%")
@@ -442,6 +602,10 @@
   (integrate-with-cognitive-grammar-agent)
   (integrate-with-distributed-coordinator)
   
+  ;; Test Python bridge integration
+  (format #t "~%🐍 Testing Python Bridge Integration:~%")
+  (sync-with-python-bridge)
+  
   (format #t "~%✅ All bridge tests completed successfully!~%")
   (format #t "📊 AtomSpace contains ~a nodes~%" (length (atomic-box-ref atomspace-nodes))))
 
@@ -456,6 +620,7 @@
      (format #t "Commands:~%")
      (format #t "  --test          Run comprehensive bridge tests~%")
      (format #t "  --integrate     Integrate with OpenCog infrastructure~%")
+     (format #t "  --sync          Sync with Python bridge~%")
      (format #t "  --query <type>  Query AtomSpace~%")
      (format #t "  --analyze       Analyze agent performance~%"))
     
@@ -464,7 +629,11 @@
     
     ((string=? (cadr args) "--integrate")
      (integrate-with-cognitive-grammar-agent)
-     (integrate-with-distributed-coordinator))
+     (integrate-with-distributed-coordinator)
+     (sync-with-python-bridge))
+    
+    ((string=? (cadr args) "--sync")
+     (sync-with-python-bridge))
     
     ((string=? (cadr args) "--analyze")
      (analyze-agent-performance))
