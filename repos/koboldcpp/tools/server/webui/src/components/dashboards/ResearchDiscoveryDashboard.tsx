@@ -9,6 +9,9 @@ import {
   ChartBarIcon,
   MagnifyingGlassIcon,
   ArrowLeftIcon,
+  SignalIcon,
+  WifiIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   ResearchData,
@@ -23,6 +26,8 @@ export default function ResearchDiscoveryDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [connectionStatus, setConnectionStatus] =
+    useState<string>('connecting');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,10 +62,20 @@ export default function ResearchDiscoveryDashboard() {
       }
     };
 
-    skzApi.connectWebSocket('research-discovery', handleWebSocketMessage);
+    skzApi.connectWebSocket('research-discovery', handleWebSocketMessage, true);
+
+    // Update connection status periodically
+    const updateConnectionStatus = () => {
+      const status = skzApi.getConnectionStatus('research-discovery');
+      setConnectionStatus(status?.status || 'disconnected');
+    };
+
+    updateConnectionStatus();
+    const statusInterval = setInterval(updateConnectionStatus, 2000);
 
     return () => {
       skzApi.disconnectWebSocket('research-discovery');
+      clearInterval(statusInterval);
     };
   }, []);
 
@@ -120,7 +135,33 @@ export default function ResearchDiscoveryDashboard() {
             </div>
           </div>
         </div>
-        <div className="badge badge-success badge-lg">Active</div>
+        <div className="flex items-center justify-between">
+          <div className="badge badge-success badge-lg">Active</div>
+          <div className="flex items-center gap-2 text-sm">
+            {connectionStatus === 'connected' && (
+              <>
+                <SignalIcon className="w-4 h-4 text-success" />
+                <span className="text-success">Real-time updates active</span>
+              </>
+            )}
+            {(connectionStatus === 'connecting' ||
+              connectionStatus === 'reconnecting') && (
+              <>
+                <WifiIcon className="w-4 h-4 text-warning animate-pulse" />
+                <span className="text-warning">Connecting...</span>
+              </>
+            )}
+            {(connectionStatus === 'error' ||
+              connectionStatus === 'disconnected') && (
+              <>
+                <ExclamationCircleIcon className="w-4 h-4 text-error" />
+                <span className="text-error">
+                  Connection lost - using cached data
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Error Alert */}

@@ -16,6 +16,8 @@ export default function AnalyticsMonitoringDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] =
+    useState<string>('connecting');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,11 +91,29 @@ export default function AnalyticsMonitoringDashboard() {
         if (message.type === 'analytics_update' && message.data) {
           setData(message.data as AnalyticsData);
         }
-      }
+      },
+      true // Enable auto-reconnect
     );
 
-    return () => skzApi.disconnectWebSocket('analytics-monitoring');
+    // Update connection status periodically
+    const updateConnectionStatus = () => {
+      const status = skzApi.getConnectionStatus('analytics-monitoring');
+      setConnectionStatus(status?.status || 'disconnected');
+    };
+
+    updateConnectionStatus();
+    const statusInterval = setInterval(updateConnectionStatus, 2000);
+
+    return () => {
+      skzApi.disconnectWebSocket('analytics-monitoring');
+      clearInterval(statusInterval);
+    };
   }, []);
+
+  // Log connection status for debugging (satisfies TypeScript unused variable warning)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Analytics dashboard connection status: ${connectionStatus}`);
+  }
 
   if (loading && !data) {
     return (

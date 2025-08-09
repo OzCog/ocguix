@@ -191,12 +191,33 @@ export interface WebSocketMessage {
   timestamp: string;
 }
 
+export interface WebSocketConnectionStatus {
+  agentName: string;
+  status:
+    | 'connecting'
+    | 'connected'
+    | 'disconnected'
+    | 'error'
+    | 'reconnecting';
+  lastConnected?: string;
+  reconnectAttempts: number;
+  error?: string;
+}
+
 class SKZApiClient {
   private baseUrl: string;
   private wsConnections: Map<string, WebSocket> = new Map();
+  private wsConnectionStatus: Map<string, WebSocketConnectionStatus> =
+    new Map();
+  private reconnectTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private messageHandlers: Map<string, (data: WebSocketMessage) => void> =
+    new Map();
+  private healthCheckInterval: NodeJS.Timeout | null = null;
 
   constructor(baseUrl: string = '') {
     this.baseUrl = baseUrl;
+    // Start global health check
+    this.startHealthCheck();
   }
 
   private async request<T>(
@@ -343,38 +364,167 @@ class SKZApiClient {
     return this.request<AnalyticsData>('/api/agents/analytics-monitoring/data');
   }
 
-  // WebSocket connections for real-time updates
+  // Enhanced WebSocket connections for real-time updates
   connectWebSocket(
     agentName: string,
-    onMessage: (data: WebSocketMessage) => void
+    onMessage: (data: WebSocketMessage) => void,
+    autoReconnect: boolean = true
+  ): void {
+    // Clean up existing connection if any
+    this.disconnectWebSocket(agentName);
+
+    // Store message handler for reconnection
+    this.messageHandlers.set(agentName, onMessage);
+
+    // Initialize connection status
+    this.wsConnectionStatus.set(agentName, {
+      agentName,
+      status: 'connecting',
+      reconnectAttempts: 0,
+    });
+
+    this.createWebSocketConnection(agentName, autoReconnect);
+  }
+
+  private createWebSocketConnection(
+    agentName: string,
+    autoReconnect: boolean = true
   ): void {
     const wsUrl = `${this.baseUrl.replace('http', 'ws')}/ws/agents/${agentName}`;
     const ws = new WebSocket(wsUrl);
+    const onMessage = this.messageHandlers.get(agentName);
+
+    if (!onMessage) {
+      console.error(`No message handler found for agent: ${agentName}`);
+      return;
+    }
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         onMessage(data);
+
+        // Update connection status on successful message
+        const status = this.wsConnectionStatus.get(agentName);
+        if (status) {
+          status.lastConnected = new Date().toISOString();
+          status.error = undefined;
+        }
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error(
+          `Failed to parse WebSocket message for ${agentName}:`,
+          error
+        );
+        this.updateConnectionStatus(
+          agentName,
+          'error',
+          `Parse error: ${error}`
+        );
       }
     };
 
     ws.onopen = () => {
       console.log(`WebSocket connected for agent: ${agentName}`);
+      this.updateConnectionStatus(agentName, 'connected');
+
+      // Clear any pending reconnection timeout
+      const timeout = this.reconnectTimeouts.get(agentName);
+      if (timeout) {
+        clearTimeout(timeout);
+        this.reconnectTimeouts.delete(agentName);
+      }
     };
 
-    ws.onclose = () => {
-      console.log(`WebSocket disconnected for agent: ${agentName}`);
-      // Attempt to reconnect after a delay
-      setTimeout(() => this.connectWebSocket(agentName, onMessage), 5000);
+    ws.onclose = (event) => {
+      console.log(`WebSocket disconnected for agent: ${agentName}`, event);
+      this.updateConnectionStatus(agentName, 'disconnected');
+
+      if (autoReconnect) {
+        this.scheduleReconnection(agentName);
+      }
     };
 
     ws.onerror = (error) => {
       console.error(`WebSocket error for agent ${agentName}:`, error);
+      this.updateConnectionStatus(agentName, 'error', 'Connection error');
     };
 
     this.wsConnections.set(agentName, ws);
+  }
+
+  private scheduleReconnection(agentName: string): void {
+    const status = this.wsConnectionStatus.get(agentName);
+    if (!status) return;
+
+    status.reconnectAttempts++;
+    status.status = 'reconnecting';
+
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+    const delay = Math.min(
+      1000 * Math.pow(2, status.reconnectAttempts - 1),
+      30000
+    );
+
+    console.log(
+      `Scheduling reconnection for ${agentName} in ${delay}ms (attempt ${status.reconnectAttempts})`
+    );
+
+    const timeout = setTimeout(() => {
+      this.reconnectTimeouts.delete(agentName);
+      this.createWebSocketConnection(agentName, true);
+    }, delay);
+
+    this.reconnectTimeouts.set(agentName, timeout);
+  }
+
+  private updateConnectionStatus(
+    agentName: string,
+    status: WebSocketConnectionStatus['status'],
+    error?: string
+  ): void {
+    const connectionStatus = this.wsConnectionStatus.get(agentName);
+    if (connectionStatus) {
+      connectionStatus.status = status;
+      connectionStatus.error = error;
+
+      if (status === 'connected') {
+        connectionStatus.reconnectAttempts = 0;
+        connectionStatus.lastConnected = new Date().toISOString();
+      }
+    }
+  }
+
+  getConnectionStatus(agentName: string): WebSocketConnectionStatus | null {
+    return this.wsConnectionStatus.get(agentName) || null;
+  }
+
+  getAllConnectionStatuses(): WebSocketConnectionStatus[] {
+    return Array.from(this.wsConnectionStatus.values());
+  }
+
+  private startHealthCheck(): void {
+    this.healthCheckInterval = setInterval(() => {
+      this.wsConnections.forEach((ws, agentName) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          // Send ping message to check connection health
+          try {
+            ws.send(
+              JSON.stringify({
+                type: 'ping',
+                timestamp: new Date().toISOString(),
+              })
+            );
+          } catch (error) {
+            console.error(`Health check failed for ${agentName}:`, error);
+            this.updateConnectionStatus(
+              agentName,
+              'error',
+              'Health check failed'
+            );
+          }
+        }
+      });
+    }, 30000); // Health check every 30 seconds
   }
 
   disconnectWebSocket(agentName: string): void {
@@ -383,6 +533,16 @@ class SKZApiClient {
       ws.close();
       this.wsConnections.delete(agentName);
     }
+
+    // Clean up associated data
+    this.messageHandlers.delete(agentName);
+    this.wsConnectionStatus.delete(agentName);
+
+    const timeout = this.reconnectTimeouts.get(agentName);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.reconnectTimeouts.delete(agentName);
+    }
   }
 
   disconnectAllWebSockets(): void {
@@ -390,6 +550,20 @@ class SKZApiClient {
       ws.close();
     });
     this.wsConnections.clear();
+    this.messageHandlers.clear();
+    this.wsConnectionStatus.clear();
+
+    // Clear all reconnection timeouts
+    this.reconnectTimeouts.forEach((timeout) => {
+      clearTimeout(timeout);
+    });
+    this.reconnectTimeouts.clear();
+
+    // Clear health check interval
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
   }
 }
 
