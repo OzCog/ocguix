@@ -31,7 +31,7 @@ WORKDIR /home/vscode
 # Install Guix using the official installation script
 RUN wget https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh && \
     chmod +x guix-install.sh && \
-    sudo ./guix-install.sh --no-daemon && \
+    sudo ./guix-install.sh && \
     rm guix-install.sh
 
 # Set up Guix environment
